@@ -24,7 +24,7 @@ export default function HomePage() {
         <header className="pt-10 pb-6">
           <h1 className="text-[24px] font-bold text-gray-900">MoveMate</h1>
           <p className="mt-1 text-[14px] text-gray-500">
-            약속 시간에 맞는 최선의 이동 방법을 찾아드릴게요
+            서울 도착 후, 가장 덜 불편한 이동을 추천해드릴게요
           </p>
         </header>
 
@@ -43,10 +43,10 @@ export default function HomePage() {
         {/* 로딩 */}
         {isFetching && (
           <div className="mt-6 space-y-3">
-            {[1, 2].map((i) => (
+            {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-40 bg-white rounded-2xl border border-gray-100 animate-pulse"
+                className="h-36 bg-white rounded-2xl border border-gray-100 animate-pulse"
               />
             ))}
           </div>
@@ -56,8 +56,10 @@ export default function HomePage() {
         {data && !isFetching && (
           <section className="mt-6 space-y-3">
             <p className="text-[13px] text-gray-500">
-              추천 경로 {data.routes.length}개 · 도착 목표{' '}
-              <strong className="text-gray-800">{data.requestedArrivalTime}</strong>
+              <strong className="text-gray-800">{data.hubName}</strong>
+              {' → '}
+              <strong className="text-gray-800">{data.destinationName}</strong>
+              {' · '}추천 {data.routes.length}가지
             </p>
             {data.routes.map((route) => (
               <RouteCard key={route.id} route={route} onClick={setSelectedRoute} />
@@ -72,12 +74,35 @@ export default function HomePage() {
             onClick={() => setSelectedRoute(null)}
           >
             <div
-              className="w-full bg-white rounded-t-3xl p-6 space-y-4"
+              className="w-full bg-white rounded-t-3xl p-6 space-y-4 max-h-[80vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto" />
-              <h2 className="text-[17px] font-semibold">경로 {selectedRoute.label} 상세</h2>
+              <h2 className="text-[17px] font-semibold">{selectedRoute.label} 상세</h2>
               <RouteCard route={selectedRoute} onClick={() => {}} />
+
+              {/* 추가 상세 정보 */}
+              <div className="space-y-3 pt-2">
+                {selectedRoute.bike && (
+                  <div className="bg-gray-50 rounded-xl p-4 space-y-1">
+                    <p className="text-[13px] font-semibold text-gray-700">🚲 자전거 대여소</p>
+                    <p className="text-[13px] text-gray-600">{selectedRoute.bike.stationName}</p>
+                    <p className="text-[12px] text-gray-500">
+                      거점에서 {selectedRoute.bike.distanceM}m · 잔여 {selectedRoute.bike.availableCount}대
+                    </p>
+                  </div>
+                )}
+                {selectedRoute.locker && (
+                  <div className="bg-gray-50 rounded-xl p-4 space-y-1">
+                    <p className="text-[13px] font-semibold text-gray-700">🧳 물품보관함</p>
+                    <p className="text-[13px] text-gray-600">{selectedRoute.locker.name}</p>
+                    <p className="text-[12px] text-gray-500">
+                      사용 가능 {selectedRoute.locker.availableCount}칸
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={() => setSelectedRoute(null)}
                 className="w-full py-3.5 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium"
