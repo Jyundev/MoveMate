@@ -61,8 +61,8 @@ export default function HomePage() {
               <strong className="text-gray-800">{data.destinationName}</strong>
               {' · '}추천 {data.routes.length}가지
             </p>
-            {data.routes.map((route) => (
-              <RouteCard key={route.id} route={route} onClick={setSelectedRoute} />
+            {data.routes.map((route, idx) => (
+              <RouteCard key={route.id} route={route} rank={idx + 1} onClick={setSelectedRoute} />
             ))}
           </section>
         )}
@@ -79,7 +79,11 @@ export default function HomePage() {
             >
               <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto" />
               <h2 className="text-[17px] font-semibold">{selectedRoute.label} 상세</h2>
-              <RouteCard route={selectedRoute} onClick={() => {}} />
+              <RouteCard
+                route={selectedRoute}
+                rank={(data?.routes.findIndex((r) => r.id === selectedRoute.id) ?? 0) + 1}
+                onClick={() => {}}
+              />
 
               {/* 추가 상세 정보 */}
               <div className="space-y-3 pt-2">
