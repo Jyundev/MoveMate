@@ -1,18 +1,14 @@
 export type TRouteInput = {
-  origin: string;
-  destination: string;
-  arrivalTime: string; // "HH:mm"
+  hubId: string;         // 도착 거점 ID (서울역/강남역/성수)
+  destinationId: string; // 최종 목적지 ID
+  arrivalTime?: string;  // "HH:mm" (선택)
   hasLuggage: boolean;
   preferLessWalking: boolean;
 };
 
 export type TAvailability = 'HIGH' | 'MEDIUM' | 'LOW';
 
-export type TBusInfo = {
-  routeNo: string;
-  arrivalMin: number; // 도착까지 남은 분
-  stopName: string;
-};
+export type TTransportMode = 'WALK' | 'BIKE' | 'LOCKER_WALK';
 
 export type TBikeInfo = {
   stationName: string;
@@ -28,13 +24,14 @@ export type TLockerInfo = {
 
 export type TRouteOption = {
   id: string;
-  label: string; // "A" | "B" | "C"
+  label: string;
+  mode: TTransportMode;
   totalMinutes: number;
   walkMinutes: number;
-  arrivalTime: string; // "HH:mm"
+  arrivalTime: string;
   stability: TAvailability;
   reason: string;
-  bus?: TBusInfo;
+  score: number;
   bike?: TBikeInfo & { availability: TAvailability };
   locker?: TLockerInfo & { availability: TAvailability };
 };
@@ -42,4 +39,6 @@ export type TRouteOption = {
 export type TRecommendResult = {
   routes: TRouteOption[];
   requestedArrivalTime: string;
+  hubName: string;
+  destinationName: string;
 };

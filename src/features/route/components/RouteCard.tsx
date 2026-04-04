@@ -1,17 +1,23 @@
 'use client';
 
-import type { TAvailability, TRouteOption } from '@/types';
+import type { TAvailability, TRouteOption, TTransportMode } from '@/types';
 
 type Props = {
   route: TRouteOption;
   onClick: (route: TRouteOption) => void;
 };
 
+const MODE_ICON: Record<TTransportMode, string> = {
+  WALK: '🚶',
+  BIKE: '🚲',
+  LOCKER_WALK: '🧳',
+};
+
 function AvailabilityBadge({ value }: { value: TAvailability }) {
   const map = {
-    HIGH: { label: '높음', className: 'bg-green-100 text-green-700' },
+    HIGH:   { label: '높음', className: 'bg-green-100 text-green-700' },
     MEDIUM: { label: '보통', className: 'bg-yellow-100 text-yellow-700' },
-    LOW: { label: '낮음', className: 'bg-red-100 text-red-600' },
+    LOW:    { label: '낮음', className: 'bg-red-100 text-red-600' },
   };
   const { label, className } = map[value];
   return (
@@ -31,30 +37,24 @@ export default function RouteCard({ route, onClick }: Props) {
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="w-7 h-7 rounded-full bg-blue-500 text-white text-[13px] font-bold
-                           flex items-center justify-center">
-            {route.label}
-          </span>
-          <span className="text-[15px] font-semibold text-gray-800">
-            총 {route.totalMinutes}분
-          </span>
+          <span className="text-xl">{MODE_ICON[route.mode]}</span>
+          <span className="text-[15px] font-semibold text-gray-800">{route.label}</span>
         </div>
         <div className="flex items-center gap-1.5 text-[12px] text-gray-500">
-          <span>안정성</span>
+          <span>이용 가능성</span>
           <AvailabilityBadge value={route.stability} />
         </div>
       </div>
 
       {/* 상세 정보 */}
       <div className="space-y-2">
-        {route.bus && (
-          <div className="flex items-center gap-2 text-[13px] text-gray-600">
-            <span>🚌</span>
-            <span>
-              {route.bus.routeNo}번 버스 <strong>{route.bus.arrivalMin}분</strong> 후 도착
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-2 text-[13px] text-gray-600">
+          <span>⏱</span>
+          <span>
+            총 <strong>{route.totalMinutes}분</strong> · 도보 {route.walkMinutes}분
+          </span>
+        </div>
+
         {route.bike && (
           <div className="flex items-center gap-2 text-[13px] text-gray-600">
             <span>🚲</span>
@@ -65,6 +65,7 @@ export default function RouteCard({ route, onClick }: Props) {
             <AvailabilityBadge value={route.bike.availability} />
           </div>
         )}
+
         {route.locker && (
           <div className="flex items-center gap-2 text-[13px] text-gray-600">
             <span>🧳</span>
@@ -74,10 +75,6 @@ export default function RouteCard({ route, onClick }: Props) {
             <AvailabilityBadge value={route.locker.availability} />
           </div>
         )}
-        <div className="flex items-center gap-2 text-[13px] text-gray-600">
-          <span>⏱</span>
-          <span>도보 {route.walkMinutes}분 포함</span>
-        </div>
       </div>
 
       {/* 추천 이유 */}
