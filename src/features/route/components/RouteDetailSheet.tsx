@@ -45,7 +45,7 @@ function buildSteps(route: TRouteOption, result: TRecommendResult): Step[] {
       {
         icon: <CheckCircle size={16} className="text-green-500" />,
         label: `${dest} 도착`,
-        sub: `예상 도착 ${route.arrivalTime}`,
+        sub: `목표 도착 ${route.targetArrivalTime}`,
       },
     ];
   }
@@ -71,7 +71,7 @@ function buildSteps(route: TRouteOption, result: TRecommendResult): Step[] {
       {
         icon: <CheckCircle size={16} className="text-green-500" />,
         label: `${dest} 도착`,
-        sub: `예상 도착 ${route.arrivalTime}`,
+        sub: `목표 도착 ${route.targetArrivalTime}`,
       },
     ];
   }
@@ -91,7 +91,7 @@ function buildSteps(route: TRouteOption, result: TRecommendResult): Step[] {
       {
         icon: <CheckCircle size={16} className="text-green-500" />,
         label: `${dest} 도착`,
-        sub: `예상 도착 ${route.arrivalTime}`,
+        sub: `목표 도착 ${route.targetArrivalTime}`,
       },
     ];
   }
@@ -237,10 +237,13 @@ export default function RouteDetailSheet({
                 ⭐ {route.reason}
               </p>
               <div className="mt-3 pt-3 border-t border-blue-100 grid grid-cols-3 gap-2 text-center">
-                <StatItem label="총 소요" value={`${route.totalMinutes}분`} />
-                <StatItem label="도보" value={`${route.walkMinutes}분`} />
-                <StatItem label="도착" value={route.arrivalTime} />
+                <StatItem label="예상 출발" value={route.estimatedDepartureTime} />
+                <StatItem label="총 소요 *" value={`${route.totalMinutes}분`} />
+                <StatItem label="목표 도착" value={route.targetArrivalTime} />
               </div>
+              <p className="text-[10px] text-blue-400 mt-2">
+                * 실시간 데이터 + 추정 이동시간 기반 (도보 67m/분, 자전거 200m/분, 보정계수 1.3 적용)
+              </p>
             </div>
           </section>
 

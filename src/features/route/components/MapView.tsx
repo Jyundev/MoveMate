@@ -248,7 +248,7 @@ export default function MapView({
               <div className="text-right">
                 <p className="text-[11px] text-gray-400">예상 도착</p>
                 <p className="text-[16px] font-bold text-gray-900">
-                  {route.arrivalTime}
+                  {route.targetArrivalTime}
                 </p>
               </div>
             </div>

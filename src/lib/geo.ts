@@ -16,7 +16,36 @@ export function haversineDistanceM(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+/**
+ * 직선거리(Haversine)를 실제 도로거리로 보정.
+ * 서울 도심 기준 도로거리는 직선거리의 약 1.3배.
+ * (정확한 경로 API 연동 전 데모용 추정치)
+ */
+export const ROAD_FACTOR = 1.3;
+
+export function roadDistanceM(straightM: number): number {
+  return Math.round(straightM * ROAD_FACTOR);
+}
+
 /** Walking speed ~4 km/h = 67 m/min */
 export function walkMinutes(distanceM: number): number {
   return Math.max(1, Math.ceil(distanceM / 67));
+}
+
+/** Cycling speed ~12 km/h = 200 m/min */
+export function bikeMinutes(distanceM: number): number {
+  return Math.max(1, Math.ceil(distanceM / 200));
+}
+
+/** HH:mm 시각에 offsetMin 분을 더함 (음수 가능) */
+export function offsetTime(base: string, offsetMin: number): string {
+  const [h, m] = base.split(':').map(Number);
+  const total = ((h * 60 + m + offsetMin) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+
+/** 현재 시각을 HH:mm 문자열로 반환 */
+export function nowHHmm(): string {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 }
