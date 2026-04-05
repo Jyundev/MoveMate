@@ -73,9 +73,21 @@ export default function RouteCard({ route, rank, onClick }: Props) {
           </span>
           <span className="text-[13px] text-gray-500 ml-0.5">분</span>
           <p className="text-[11px] text-gray-400 mt-0.5">
-            도보 {route.walkMinutes}분 포함
+            도보 {route.walkMinutes}분 포함 · 추정
           </p>
         </div>
+      </div>
+
+      {/* 출발/도착 시각 */}
+      <div className={`flex items-center gap-2 text-[12px] rounded-xl px-3 py-2 ${isTop ? 'bg-blue-100/50' : 'bg-gray-50'}`}>
+        <span className={isTop ? 'text-blue-500' : 'text-gray-400'}>🕐</span>
+        <span className={`font-semibold tabular-nums ${isTop ? 'text-blue-700' : 'text-gray-700'}`}>
+          출발 {route.estimatedDepartureTime}
+        </span>
+        <span className={isTop ? 'text-blue-300' : 'text-gray-300'}>→</span>
+        <span className={`font-semibold tabular-nums ${isTop ? 'text-blue-700' : 'text-gray-700'}`}>
+          도착 {route.targetArrivalTime}
+        </span>
       </div>
 
       {/* 실시간 정보 */}

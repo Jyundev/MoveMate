@@ -28,7 +28,10 @@ export type TRouteOption = {
   mode: TTransportMode;
   totalMinutes: number;
   walkMinutes: number;
-  arrivalTime: string;
+  /** 사용자가 목표한 도착 시각 (HH:mm) */
+  targetArrivalTime: string;
+  /** 목표 도착 시각에 맞추기 위해 출발해야 하는 시각 (HH:mm) */
+  estimatedDepartureTime: string;
   stability: TAvailability;
   reason: string;
   score: number;
@@ -38,7 +41,8 @@ export type TRouteOption = {
 
 export type TRecommendResult = {
   routes: TRouteOption[];
-  requestedArrivalTime: string;
+  /** 사용자가 설정한 목표 도착 시각 (미설정 시 1순위 경로 기준 예상 도착 시각) */
+  targetArrivalTime: string;
   hubName: string;
   destinationName: string;
 };
