@@ -78,7 +78,7 @@ export default function TimePickerSheet({ value, onConfirm, onClose }: Props) {
               type="button"
               onClick={() => setPeriod(p)}
               className={[
-                'flex-1 py-2 rounded-xl text-[13px] font-semibold border transition',
+                'flex-1 py-3 rounded-xl text-[14px] font-semibold border transition active:opacity-80',
                 period === p
                   ? 'bg-blue-500 border-blue-500 text-white'
                   : 'bg-white border-gray-200 text-gray-500',
@@ -99,10 +99,10 @@ export default function TimePickerSheet({ value, onConfirm, onClose }: Props) {
                 type="button"
                 onClick={() => setHour(h)}
                 className={[
-                  'py-2 rounded-lg text-[13px] font-medium border transition',
+                  'py-3 rounded-lg text-[14px] font-medium border transition active:opacity-80',
                   hour === h
                     ? 'bg-blue-500 border-blue-500 text-white'
-                    : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50',
+                    : 'bg-white border-gray-100 text-gray-700',
                 ].join(' ')}
               >
                 {h}
@@ -121,10 +121,10 @@ export default function TimePickerSheet({ value, onConfirm, onClose }: Props) {
                 type="button"
                 onClick={() => setMinute(m)}
                 className={[
-                  'py-2 rounded-lg text-[13px] font-medium border transition',
+                  'py-3.5 rounded-lg text-[14px] font-medium border transition active:opacity-80',
                   minute === m
                     ? 'bg-blue-500 border-blue-500 text-white'
-                    : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50',
+                    : 'bg-white border-gray-100 text-gray-700',
                 ].join(' ')}
               >
                 {String(m).padStart(2, '0')}
@@ -138,14 +138,14 @@ export default function TimePickerSheet({ value, onConfirm, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-600 text-[13px] font-semibold"
+            className="flex-1 py-4 rounded-xl bg-gray-100 text-gray-600 text-[14px] font-semibold active:opacity-80 transition"
           >
             취소
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className="flex-1 py-3 rounded-xl bg-blue-500 text-white text-[13px] font-semibold hover:bg-blue-600 transition"
+            className="flex-1 py-4 rounded-xl bg-blue-500 text-white text-[14px] font-semibold active:bg-blue-700 transition"
           >
             확인
           </button>
