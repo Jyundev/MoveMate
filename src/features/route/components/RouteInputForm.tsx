@@ -55,18 +55,18 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
 
   const segClass = (active: boolean) =>
     [
-      'flex-1 py-2.5 text-[14px] font-medium rounded-xl border transition',
+      'flex-1 py-3 text-[14px] font-medium rounded-xl border transition active:scale-[0.97]',
       active
-        ? 'bg-blue-500 border-blue-500 text-white'
-        : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50',
+        ? 'bg-blue-500 border-blue-500 text-white active:bg-blue-700'
+        : 'bg-white border-gray-200 text-gray-500 active:bg-gray-100',
     ].join(' ');
 
   const chipClass = (active: boolean) =>
     [
-      'px-4 py-2 rounded-full text-[13px] font-medium border transition',
+      'px-4 py-2.5 rounded-full text-[13px] font-medium border transition active:scale-[0.96]',
       active
-        ? 'bg-blue-500 border-blue-500 text-white'
-        : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50',
+        ? 'bg-blue-500 border-blue-500 text-white active:bg-blue-700'
+        : 'bg-white border-gray-200 text-gray-500 active:bg-gray-100',
     ].join(' ');
 
   return (
@@ -151,7 +151,7 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
           <button
             type="button"
             onClick={() => setShowPicker(true)}
-            className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition"
+            className="w-full flex items-center justify-between px-4 py-4 rounded-xl border border-gray-200 bg-white active:bg-gray-50 transition"
           >
             <span className="text-[13px] text-gray-500">도착 희망 시간</span>
             <span className={`text-[15px] font-semibold ${arrivalTime ? 'text-blue-500' : 'text-gray-400'}`}>
@@ -180,7 +180,7 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
         type="submit"
         disabled={isLoading}
         className="w-full py-4 rounded-xl bg-blue-500 text-white font-semibold text-[15px]
-                   hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                   transition active:bg-blue-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading ? '추천 계산 중...' : '추천받기'}
       </button>

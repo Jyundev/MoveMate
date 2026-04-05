@@ -1,12 +1,24 @@
 'use client';
 
+import OnboardingScreen from '@/features/onboarding/components/OnboardingScreen';
 import RouteCard from '@/features/route/components/RouteCard';
+import RouteDetailSheet from '@/features/route/components/RouteDetailSheet';
 import RouteInputForm from '@/features/route/components/RouteInputForm';
 import { useRouteRecommend } from '@/features/route/hooks/useRouteRecommend';
 import type { TRouteInput, TRouteOption } from '@/types';
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 
+// SSR 비활성화 (Leaflet은 브라우저 전용)
+const MapView = dynamic(
+  () => import('@/features/route/components/MapView'),
+  { ssr: false }
+);
+
+type View = 'onboarding' | 'main' | 'map';
+
 export default function HomePage() {
+  const [view, setView] = useState<View>('onboarding');
   const [input, setInput] = useState<TRouteInput | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<TRouteOption | null>(null);
 
@@ -17,12 +29,43 @@ export default function HomePage() {
     setInput(formInput);
   };
 
+  const handleShowMap = () => {
+    setView('map');
+  };
+
+  const handleBackFromMap = () => {
+    setView('main');
+  };
+
+  // 온보딩
+  if (view === 'onboarding') {
+    return <OnboardingScreen onStart={() => setView('main')} />;
+  }
+
+  // 지도 화면
+  if (view === 'map' && selectedRoute && input && data) {
+    return (
+      <MapView
+        input={input}
+        route={selectedRoute}
+        hubName={data.hubName}
+        destinationName={data.destinationName}
+        onBack={handleBackFromMap}
+      />
+    );
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-[480px] px-5 pb-16">
         {/* 헤더 */}
         <header className="pt-10 pb-6">
-          <h1 className="text-[24px] font-bold text-gray-900">MoveMate</h1>
+          <button
+            onClick={() => setView('onboarding')}
+            className="text-[24px] font-bold text-gray-900 hover:text-blue-500 transition-colors"
+          >
+            MoveMate
+          </button>
           <p className="mt-1 text-[14px] text-gray-500">
             서울 도착 후, 가장 덜 불편한 이동을 추천해드릴게요
           </p>
@@ -62,61 +105,27 @@ export default function HomePage() {
               {' · '}추천 {data.routes.length}가지
             </p>
             {data.routes.map((route, idx) => (
-              <RouteCard key={route.id} route={route} rank={idx + 1} onClick={setSelectedRoute} />
+              <RouteCard
+                key={route.id}
+                route={route}
+                rank={idx + 1}
+                onClick={setSelectedRoute}
+              />
             ))}
           </section>
         )}
-
-        {/* 상세 바텀시트 */}
-        {selectedRoute && (
-          <div
-            className="fixed inset-0 bg-black/40 flex items-end z-50"
-            onClick={() => setSelectedRoute(null)}
-          >
-            <div
-              className="w-full bg-white rounded-t-3xl p-6 space-y-4 max-h-[80vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto" />
-              <h2 className="text-[17px] font-semibold">{selectedRoute.label} 상세</h2>
-              <RouteCard
-                route={selectedRoute}
-                rank={(data?.routes.findIndex((r) => r.id === selectedRoute.id) ?? 0) + 1}
-                onClick={() => {}}
-              />
-
-              {/* 추가 상세 정보 */}
-              <div className="space-y-3 pt-2">
-                {selectedRoute.bike && (
-                  <div className="bg-gray-50 rounded-xl p-4 space-y-1">
-                    <p className="text-[13px] font-semibold text-gray-700">🚲 자전거 대여소</p>
-                    <p className="text-[13px] text-gray-600">{selectedRoute.bike.stationName}</p>
-                    <p className="text-[12px] text-gray-500">
-                      거점에서 {selectedRoute.bike.distanceM}m · 잔여 {selectedRoute.bike.availableCount}대
-                    </p>
-                  </div>
-                )}
-                {selectedRoute.locker && (
-                  <div className="bg-gray-50 rounded-xl p-4 space-y-1">
-                    <p className="text-[13px] font-semibold text-gray-700">🧳 물품보관함</p>
-                    <p className="text-[13px] text-gray-600">{selectedRoute.locker.name}</p>
-                    <p className="text-[12px] text-gray-500">
-                      사용 가능 {selectedRoute.locker.availableCount}칸
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={() => setSelectedRoute(null)}
-                className="w-full py-3.5 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium"
-              >
-                닫기
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* 상세 바텀시트 */}
+      {selectedRoute && data && (
+        <RouteDetailSheet
+          route={selectedRoute}
+          result={data}
+          rank={(data.routes.findIndex((r) => r.id === selectedRoute.id)) + 1}
+          onClose={() => setSelectedRoute(null)}
+          onShowMap={handleShowMap}
+        />
+      )}
     </main>
   );
 }

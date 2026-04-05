@@ -32,10 +32,10 @@ export default function RouteCard({ route, rank, onClick }: Props) {
     <button
       onClick={() => onClick(route)}
       className={[
-        "w-full text-left rounded-2xl border p-5 space-y-4 transition",
+        "w-full text-left rounded-2xl border p-5 space-y-4 transition active:scale-[0.98] active:opacity-90",
         isTop
-          ? "bg-blue-50 border-blue-200 shadow-sm hover:shadow-md"
-          : "bg-white border-gray-100 shadow-sm hover:shadow-md",
+          ? "bg-blue-50 border-blue-200 shadow-sm"
+          : "bg-white border-gray-100 shadow-sm",
       ].join(" ")}
     >
       {/* 헤더 */}
