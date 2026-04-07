@@ -8,6 +8,9 @@ export type TRouteInput = {
 
 export type TAvailability = 'HIGH' | 'MEDIUM' | 'LOW';
 
+/** 이 전략이 실제 이동에서 꼬일 가능성 */
+export type TFailRisk = 'LOW' | 'MEDIUM' | 'HIGH';
+
 export type TTransportMode = 'WALK' | 'BIKE' | 'LOCKER_WALK';
 
 export type TBikeInfo = {
@@ -32,7 +35,10 @@ export type TRouteOption = {
   targetArrivalTime: string;
   /** 목표 도착 시각에 맞추기 위해 출발해야 하는 시각 (HH:mm) */
   estimatedDepartureTime: string;
+  /** 현재 자원(자전거·보관함)이 충분한가 — 지금 가능한지 */
   stability: TAvailability;
+  /** 가능하더라도 실제 이동에서 꼬일 가능성 — 실패할 수 있는지 */
+  failRisk: TFailRisk;
   reason: string;
   score: number;
   bike?: TBikeInfo & { availability: TAvailability };

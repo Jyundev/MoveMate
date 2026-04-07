@@ -241,6 +241,18 @@ export default function RouteDetailSheet({
                 <StatItem label="총 소요 *" value={`${route.totalMinutes}분`} />
                 <StatItem label="목표 도착" value={route.targetArrivalTime} />
               </div>
+              <div className="mt-3 pt-3 border-t border-blue-100 grid grid-cols-2 gap-2">
+                <RiskItem
+                  label="실행 가능성"
+                  value={{ HIGH: '높음', MEDIUM: '보통', LOW: '낮음' }[route.stability]}
+                  color={{ HIGH: 'text-green-600', MEDIUM: 'text-yellow-600', LOW: 'text-red-500' }[route.stability]}
+                />
+                <RiskItem
+                  label="실패 위험도"
+                  value={{ LOW: '낮음', MEDIUM: '보통', HIGH: '높음' }[route.failRisk]}
+                  color={{ LOW: 'text-green-600', MEDIUM: 'text-yellow-600', HIGH: 'text-red-500' }[route.failRisk]}
+                />
+              </div>
               <p className="text-[10px] text-blue-400 mt-2">
                 * 실시간 데이터 + 추정 이동시간 기반 (도보 67m/분, 자전거 200m/분, 보정계수 1.3 적용)
               </p>
@@ -319,6 +331,15 @@ function StatItem({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-[11px] text-blue-500">{label}</p>
       <p className="text-[15px] font-bold text-blue-900">{value}</p>
+    </div>
+  );
+}
+
+function RiskItem({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div className="text-center">
+      <p className="text-[11px] text-blue-500">{label}</p>
+      <p className={`text-[14px] font-bold mt-0.5 ${color}`}>{value}</p>
     </div>
   );
 }

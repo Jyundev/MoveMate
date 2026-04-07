@@ -1,11 +1,11 @@
 "use client";
 
-import type { TAvailability, TRouteOption, TTransportMode } from "@/types";
+import type { TAvailability, TFailRisk, TRouteOption, TTransportMode } from "@/types";
 import { Bike, Footprints, Package } from "lucide-react";
 
 type Props = {
   route: TRouteOption;
-  rank: number; // 1 = 1순위
+  rank: number;
   onClick: (route: TRouteOption) => void;
 };
 
@@ -15,18 +15,22 @@ const MODE_ICON: Record<TTransportMode, React.ReactNode> = {
   LOCKER_WALK: <Package size={20} />,
 };
 
-const RECOMMENDATION_LABEL: Record<
-  TAvailability,
-  { label: string; className: string }
-> = {
-  HIGH: { label: "추천도 높음", className: "bg-green-100 text-green-700" },
-  MEDIUM: { label: "추천도 보통", className: "bg-yellow-100 text-yellow-700" },
-  LOW: { label: "추천도 낮음", className: "bg-red-100 text-red-600" },
+const STABILITY_LABEL: Record<TAvailability, { label: string; className: string }> = {
+  HIGH:   { label: "실행 가능성 높음", className: "text-green-700" },
+  MEDIUM: { label: "실행 가능성 보통", className: "text-yellow-600" },
+  LOW:    { label: "실행 가능성 낮음", className: "text-red-500" },
+};
+
+const FAIL_RISK_LABEL: Record<TFailRisk, { label: string; className: string; dot: string }> = {
+  LOW:    { label: "실패 위험 낮음",  className: "bg-green-100 text-green-700",   dot: "bg-green-400" },
+  MEDIUM: { label: "실패 위험 보통",  className: "bg-yellow-100 text-yellow-700", dot: "bg-yellow-400" },
+  HIGH:   { label: "실패 위험 높음",  className: "bg-red-100 text-red-600",       dot: "bg-red-400" },
 };
 
 export default function RouteCard({ route, rank, onClick }: Props) {
   const isTop = rank === 1;
-  const rec = RECOMMENDATION_LABEL[route.stability];
+  const stability = STABILITY_LABEL[route.stability];
+  const risk = FAIL_RISK_LABEL[route.failRisk];
 
   return (
     <button
@@ -38,10 +42,9 @@ export default function RouteCard({ route, rank, onClick }: Props) {
           : "bg-white border-gray-100 shadow-sm",
       ].join(" ")}
     >
-      {/* 헤더 */}
+      {/* 헤더: 순위 + 실패위험도 배지 */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
-          {/* 순위 배지 */}
           {isTop ? (
             <span className="flex items-center gap-1 text-[11px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
               ✦ 가장 추천
@@ -52,10 +55,10 @@ export default function RouteCard({ route, rank, onClick }: Props) {
             </span>
           )}
         </div>
-        <span
-          className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${rec.className}`}
-        >
-          {rec.label}
+        {/* 실패 위험도 배지 */}
+        <span className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${risk.className}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${risk.dot}`} />
+          {risk.label}
         </span>
       </div>
 
@@ -115,12 +118,17 @@ export default function RouteCard({ route, rank, onClick }: Props) {
         </div>
       )}
 
-      {/* 추천 이유 */}
+      {/* 실행 가능성 + 추천 이유 */}
       <div
-        className={`rounded-xl px-4 py-3 ${
+        className={`rounded-xl px-4 py-3 space-y-2 ${
           isTop ? "bg-blue-100/60" : "bg-gray-50"
         }`}
       >
+        <div className="flex items-center gap-1.5">
+          <span className={`text-[11px] font-semibold ${stability.className}`}>
+            ● {stability.label}
+          </span>
+        </div>
         <p
           className={`text-[12px] leading-[1.6] ${
             isTop ? "text-blue-700" : "text-gray-600"
