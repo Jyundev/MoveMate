@@ -3,13 +3,14 @@ import { getLockerRealtime } from '@/features/locker/services/lockerService';
 import { findHub, findSubDestination } from '@/config/demoPlaces';
 import {
   bikeMinutes,
+  diffMinutes,
   haversineDistanceM,
   nowHHmm,
   offsetTime,
   roadDistanceM,
   walkMinutes,
 } from '@/lib/geo';
-import type { TAvailability, TRecommendResult, TRouteOption, TTransportMode } from '@/types';
+import type { TAvailability, TFailRisk, TRecommendResult, TRouteOption, TTransportMode } from '@/types';
 
 function toAvailability(count: number, mid: number, high: number): TAvailability {
   if (count >= high) return 'HIGH';
@@ -141,12 +142,18 @@ export async function computeRouteRecommendation(
     };
   }
 
+  // failRisk 계산을 위한 공통 파라미터
+  const requestNowHHmm = nowHHmm();
+
   const routes: TRouteOption[] = candidates.map((c, idx) => {
     const id = ['A', 'B', 'C'][idx];
 
     switch (c.mode) {
       case 'WALK': {
         const times = resolveTimes(walkMin);
+        const timeBufferMinutes = hasTargetTime
+          ? diffMinutes(requestNowHHmm, targetArrivalTime) - walkMin
+          : 999;
         return {
           id,
           label: LABELS.WALK,
@@ -155,17 +162,24 @@ export async function computeRouteRecommendation(
           walkMinutes: walkMin,
           ...times,
           stability: walkDistM < 1500 ? 'HIGH' : 'MEDIUM',
+          failRisk: computeFailRisk({
+            mode: 'WALK', bikeCount, lockerCount: totalLockers,
+            totalMinutes: walkMin, walkMin, walkDistM,
+            hasLuggage, preferLessWalking, hasTargetTime, timeBufferMinutes,
+          }),
           score: c.score,
           reason: buildReason('WALK', { hasLuggage, preferLessWalking, walkDistM }),
         };
       }
 
       case 'BIKE': {
-        // 대여소까지 도보(보정거리) + 목적지까지 자전거(보정거리)
         const toStationMin = nearestBike ? walkMinutes(nearestBike.roadM) : walkMin;
         const rideMin = nearestBike ? bikeMinutes(walkDistM) : walkMin;
         const totalMin = nearestBike ? toStationMin + rideMin : walkMin;
         const times = resolveTimes(totalMin);
+        const timeBufferMinutes = hasTargetTime
+          ? diffMinutes(requestNowHHmm, targetArrivalTime) - totalMin
+          : 999;
         return {
           id,
           label: LABELS.BIKE,
@@ -174,13 +188,18 @@ export async function computeRouteRecommendation(
           walkMinutes: toStationMin,
           ...times,
           stability: bikeAvailability,
+          failRisk: computeFailRisk({
+            mode: 'BIKE', bikeCount, lockerCount: totalLockers,
+            totalMinutes: totalMin, walkMin: toStationMin, walkDistM,
+            hasLuggage, preferLessWalking, hasTargetTime, timeBufferMinutes,
+          }),
           score: c.score,
           reason: buildReason('BIKE', { bikeCount, nearestBike }),
           ...(nearestBike && {
             bike: {
               stationName: nearestBike.name,
               availableCount: nearestBike.count,
-              distanceM: nearestBike.roadM, // 보정된 도로 거리 노출
+              distanceM: nearestBike.roadM,
               availability: bikeAvailability,
             },
           }),
@@ -189,10 +208,12 @@ export async function computeRouteRecommendation(
 
       case 'LOCKER_WALK':
       default: {
-        // 보관함 이용 5분(고정 추정) + 도보 이동
-        const LOCKER_USE_MIN = 5; // 추정치
+        const LOCKER_USE_MIN = 5;
         const totalMin = walkMin + LOCKER_USE_MIN;
         const times = resolveTimes(totalMin);
+        const timeBufferMinutes = hasTargetTime
+          ? diffMinutes(requestNowHHmm, targetArrivalTime) - totalMin
+          : 999;
         return {
           id,
           label: LABELS.LOCKER_WALK,
@@ -201,6 +222,11 @@ export async function computeRouteRecommendation(
           walkMinutes: walkMin,
           ...times,
           stability: lockerAvailability,
+          failRisk: computeFailRisk({
+            mode: 'LOCKER_WALK', bikeCount, lockerCount: totalLockers,
+            totalMinutes: totalMin, walkMin, walkDistM,
+            hasLuggage, preferLessWalking, hasTargetTime, timeBufferMinutes,
+          }),
           score: c.score,
           reason: buildReason('LOCKER_WALK', { totalLockers, hasLuggage }),
           locker: {
@@ -220,6 +246,84 @@ export async function computeRouteRecommendation(
     hubName: hub.name,
     destinationName: dest.name,
   };
+}
+
+/**
+ * 실패 위험도 계산 (0~100점 → LOW / MEDIUM / HIGH)
+ *
+ * 5가지 요소를 가중치 점수로 합산:
+ *   1. 실시간 자원 부족 위험  (0~35점)
+ *   2. 시간 촉박 위험        (0~25점)
+ *   3. 거리/피로 위험        (0~20점)
+ *   4. 사용자 조건 불일치    (0~15점)
+ *   5. 전략 복잡도           (0~5점)
+ *
+ *  0~29 → LOW · 30~59 → MEDIUM · 60~ → HIGH
+ */
+function computeFailRisk(params: {
+  mode: TTransportMode;
+  bikeCount: number;
+  lockerCount: number;
+  totalMinutes: number;
+  walkMin: number;
+  walkDistM: number;
+  hasLuggage: boolean;
+  preferLessWalking: boolean;
+  hasTargetTime: boolean;
+  timeBufferMinutes: number;
+}): TFailRisk {
+  let score = 0;
+
+  // ── 1. 실시간 자원 부족 위험 (0~35) ──────────────────────────
+  if (params.mode === 'BIKE') {
+    if (params.bikeCount === 0)      score += 35;
+    else if (params.bikeCount <= 1)  score += 25;
+    else if (params.bikeCount <= 2)  score += 15;
+    else if (params.bikeCount <= 4)  score += 8;
+    // >= 5 → 0
+  } else if (params.mode === 'LOCKER_WALK') {
+    if (params.lockerCount === 0)      score += 35;
+    else if (params.lockerCount <= 1)  score += 25;
+    else if (params.lockerCount <= 3)  score += 15;
+    else if (params.lockerCount <= 5)  score += 8;
+    // > 5 → 0
+  }
+  // WALK: 자원 의존 없음 → 0
+
+  // ── 2. 시간 촉박 위험 (0~25) ──────────────────────────────────
+  if (params.hasTargetTime) {
+    const buf = params.timeBufferMinutes;
+    if (buf < 0)       score += 25; // 이미 지각
+    else if (buf < 5)  score += 20;
+    else if (buf < 10) score += 12;
+    else if (buf < 20) score += 5;
+    // >= 20 → 0 (여유 있음)
+  }
+
+  // ── 3. 거리/피로 위험 (0~20) ──────────────────────────────────
+  if (params.walkMin >= 20)      score += 20;
+  else if (params.walkMin >= 15) score += 15;
+  else if (params.walkMin >= 10) score += 8;
+  else if (params.walkMin >= 5)  score += 3;
+
+  // ── 4. 사용자 조건 불일치 위험 (0~15) ────────────────────────
+  if (params.mode === 'WALK' && params.preferLessWalking && params.walkDistM > 1000) {
+    score += 15;
+  } else if (params.mode === 'BIKE' && params.hasLuggage) {
+    score += 10;
+  } else if (params.mode === 'LOCKER_WALK' && !params.hasLuggage) {
+    score += 8;
+  } else if (params.mode === 'WALK' && params.hasLuggage) {
+    score += 5;
+  }
+
+  // ── 5. 전략 복잡도 위험 (0~5) ────────────────────────────────
+  if (params.mode === 'LOCKER_WALK') score += 5; // 보관함 찾기 → 보관 → 도보
+  else if (params.mode === 'BIKE')   score += 3; // 대여소 찾기 → 대여 → 이동
+
+  if (score >= 60) return 'HIGH';
+  if (score >= 30) return 'MEDIUM';
+  return 'LOW';
 }
 
 function buildReason(

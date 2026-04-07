@@ -49,3 +49,17 @@ export function nowHHmm(): string {
   const now = new Date();
   return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 }
+
+/**
+ * from → to 까지 몇 분인지 반환 (자정 경계 처리 포함)
+ * 예) diffMinutes('19:00', '19:30') → 30
+ *     diffMinutes('23:50', '00:10') → 20
+ */
+export function diffMinutes(from: string, to: string): number {
+  const [fh, fm] = from.split(':').map(Number);
+  const [th, tm] = to.split(':').map(Number);
+  let diff = (th * 60 + tm) - (fh * 60 + fm);
+  if (diff < -720) diff += 1440;
+  if (diff > 720) diff -= 1440;
+  return diff;
+}
