@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, message: error.message }, { status: 400 });
     }
 
-    const { hubId, destinationId, arrivalTime, hasLuggage, preferLessWalking } = parsed.data;
+    const { hubId, destinationId, arrivalTime, hasLuggage, lockerPreference, preferLessWalking } = parsed.data;
 
     const result = await computeRouteRecommendation(
       hubId,
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
       arrivalTime,
       hasLuggage,
       preferLessWalking,
+      lockerPreference,
     );
 
     return NextResponse.json({ ok: true, data: result });

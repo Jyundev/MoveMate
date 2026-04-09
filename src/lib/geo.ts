@@ -1,18 +1,18 @@
 /** Returns distance in meters between two coordinates (Haversine formula) */
 export function haversineDistanceM(
   lat1: number,
-  lot1: number,
+  lng1: number,
   lat2: number,
-  lot2: number,
+  lng2: number
 ): number {
   const R = 6_371_000;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLot = ((lot2 - lot1) * Math.PI) / 180;
+  const dlng = ((lng2 - lng1) * Math.PI) / 180;
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLot / 2) ** 2;
+      Math.sin(dlng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
@@ -39,15 +39,19 @@ export function bikeMinutes(distanceM: number): number {
 
 /** HH:mm 시각에 offsetMin 분을 더함 (음수 가능) */
 export function offsetTime(base: string, offsetMin: number): string {
-  const [h, m] = base.split(':').map(Number);
-  const total = ((h * 60 + m + offsetMin) % 1440 + 1440) % 1440;
-  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+  const [h, m] = base.split(":").map(Number);
+  const total = (((h * 60 + m + offsetMin) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(
+    total % 60
+  ).padStart(2, "0")}`;
 }
 
 /** 현재 시각을 HH:mm 문자열로 반환 */
 export function nowHHmm(): string {
   const now = new Date();
-  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  return `${String(now.getHours()).padStart(2, "0")}:${String(
+    now.getMinutes()
+  ).padStart(2, "0")}`;
 }
 
 /**
@@ -56,9 +60,9 @@ export function nowHHmm(): string {
  *     diffMinutes('23:50', '00:10') → 20
  */
 export function diffMinutes(from: string, to: string): number {
-  const [fh, fm] = from.split(':').map(Number);
-  const [th, tm] = to.split(':').map(Number);
-  let diff = (th * 60 + tm) - (fh * 60 + fm);
+  const [fh, fm] = from.split(":").map(Number);
+  const [th, tm] = to.split(":").map(Number);
+  let diff = th * 60 + tm - (fh * 60 + fm);
   if (diff < -720) diff += 1440;
   if (diff > 720) diff -= 1440;
   return diff;

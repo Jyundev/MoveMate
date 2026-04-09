@@ -3,7 +3,7 @@
 import { HUBS, getSubDestinations } from '@/config/demoPlaces';
 import { RouteInputSchema } from '@/features/route/schemas/route.schema';
 import TimePickerSheet from '@/features/route/components/TimePickerSheet';
-import type { TRouteInput } from '@/types';
+import type { TLockerPreference, TRouteInput } from '@/types';
 import { useState } from 'react';
 
 type Props = {
@@ -20,6 +20,7 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
   const [arrivalTime, setArrivalTime] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [hasLuggage, setHasLuggage] = useState<boolean | null>(null);
+  const [lockerPreference, setLockerPreference] = useState<TLockerPreference | null>(null);
   const [preferLessWalking, setPreferLessWalking] = useState<boolean | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -30,6 +31,11 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
     setDestinationId('');
   };
 
+  const handleHasLuggageChange = (val: boolean) => {
+    setHasLuggage(val);
+    if (!val) setLockerPreference(null);
+  };
+
   const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
     const result = RouteInputSchema.safeParse({
@@ -37,6 +43,7 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
       destinationId,
       arrivalTime: timeMode === 'set' ? arrivalTime : '',
       hasLuggage: hasLuggage ?? false,
+      lockerPreference: hasLuggage ? (lockerPreference ?? undefined) : undefined,
       preferLessWalking: preferLessWalking ?? false,
     });
 
@@ -105,12 +112,47 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
         <p className="text-[15px] font-semibold text-gray-800">짐이 있나요?</p>
         <div className="flex gap-2">
           {([true, false] as const).map((val) => (
-            <button key={String(val)} type="button" onClick={() => setHasLuggage(val)} className={segClass(hasLuggage === val)}>
+            <button key={String(val)} type="button" onClick={() => handleHasLuggageChange(val)} className={segClass(hasLuggage === val)}>
               {val ? '짐이 있어요' : '가볍게 왔어요'}
             </button>
           ))}
         </div>
       </div>
+
+      {/* 3-1. 짐 보관 위치 선호 (짐 있을 때만) */}
+      {hasLuggage && (
+        <div className="space-y-2.5">
+          <p className="text-[15px] font-semibold text-gray-800">
+            짐은 어디서 맡기고 싶으세요?
+          </p>
+          <div className="flex flex-col gap-2">
+            {(
+              [
+                { value: 'hub', label: '도착하자마자 맡기기', desc: '거점 근처 보관함에 바로 맡기고 이동' },
+                { value: 'destination', label: '목적지 근처에서 맡기기', desc: '목적지 도착 후 근처 보관함 이용' },
+                { value: 'recommend', label: '아직 모르겠어요 (추천받기)', desc: '두 옵션 모두 비교해드립니다' },
+              ] as const
+            ).map(({ value, label, desc }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setLockerPreference(value)}
+                className={[
+                  'w-full text-left px-4 py-3 rounded-xl border transition active:scale-[0.98]',
+                  lockerPreference === value
+                    ? 'bg-blue-500 border-blue-500 text-white'
+                    : 'bg-white border-gray-200 text-gray-700 active:bg-gray-50',
+                ].join(' ')}
+              >
+                <p className="text-[14px] font-medium">{label}</p>
+                <p className={`text-[12px] mt-0.5 ${lockerPreference === value ? 'text-blue-100' : 'text-gray-400'}`}>
+                  {desc}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 4. 걷기 선호도 */}
       <div className="space-y-2.5">
