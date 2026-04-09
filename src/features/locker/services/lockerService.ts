@@ -28,7 +28,7 @@ export type TNearbyLocker = {
   stlckId: string;
   name: string;
   lat: number;
-  lng: number;
+  lot: number;
   straightM: number;
   roadM: number;
   large: number;
@@ -61,7 +61,7 @@ export async function getLockerRealtime(
  */
 export async function getNearbyLockerAvailability(
   hubLat: number,
-  hubLng: number,
+  hubLot: number,
   maxDistM = 3000
 ): Promise<{ nearby: TNearbyLocker[]; totalAvailable: number }> {
   const [infoList, realtimeList] = await Promise.all([
@@ -77,10 +77,10 @@ export async function getNearbyLockerAvailability(
   for (const info of infoList) {
     if (!info.stlckId || !info.lat || !info.lot) continue;
     const lat = parseFloat(info.lat);
-    const lng = parseFloat(info.lot);
-    if (isNaN(lat) || isNaN(lng)) continue;
+    const lot = parseFloat(info.lot);
+    if (isNaN(lat) || isNaN(lot)) continue;
 
-    const straightM = haversineDistanceM(hubLat, hubLng, lat, lng);
+    const straightM = haversineDistanceM(hubLat, hubLot, lat, lot);
     if (straightM > maxDistM) continue;
 
     const rt = realtimeMap.get(info.stlckId);
@@ -93,7 +93,7 @@ export async function getNearbyLockerAvailability(
       stlckId: info.stlckId,
       name: info.stlckRprsPstnNm ?? info.sggNm ?? "인근 보관함",
       lat,
-      lng,
+      lot,
       straightM: Math.round(straightM),
       roadM: roadDistanceM(straightM),
       large,

@@ -52,7 +52,7 @@ export default function MapView({
       if (!mapContainerRef.current || mapRef.current) return;
 
       const centerLat = (hub.lat + dest.lat) / 2;
-      const centerLon = (hub.lng + dest.lng) / 2;
+      const centerLon = (hub.lot + dest.lot) / 2;
 
       const map = L.map(mapContainerRef.current, {
         center: [centerLat, centerLon],
@@ -73,7 +73,7 @@ export default function MapView({
         iconSize: [40, 40],
         iconAnchor: [20, 20],
       });
-      L.marker([hub.lat, hub.lng], { icon: hubMarker })
+      L.marker([hub.lat, hub.lot], { icon: hubMarker })
         .addTo(map)
         .bindPopup(`<b>${hubName}</b><br/>도착 거점`, { closeButton: false });
 
@@ -85,7 +85,7 @@ export default function MapView({
         iconSize: [40, 40],
         iconAnchor: [20, 20],
       });
-      L.marker([dest.lat, dest.lng], { icon: destMarker })
+      L.marker([dest.lat, dest.lot], { icon: destMarker })
         .addTo(map)
         .bindPopup(`<b>${destinationName}</b><br/>최종 목적지`, {
           closeButton: false,
@@ -94,8 +94,8 @@ export default function MapView({
       // 경로선
       L.polyline(
         [
-          [hub.lat, hub.lng],
-          [dest.lat, dest.lng],
+          [hub.lat, hub.lot],
+          [dest.lat, dest.lot],
         ],
         {
           color: destColor,
@@ -108,8 +108,8 @@ export default function MapView({
       // 허브·목적지가 모두 보이도록
       map.fitBounds(
         [
-          [hub.lat, hub.lng],
-          [dest.lat, dest.lng],
+          [hub.lat, hub.lot],
+          [dest.lat, dest.lot],
         ],
         { padding: [60, 60] }
       );

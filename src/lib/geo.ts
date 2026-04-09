@@ -1,18 +1,18 @@
 /** Returns distance in meters between two coordinates (Haversine formula) */
 export function haversineDistanceM(
   lat1: number,
-  lng1: number,
+  lot1: number,
   lat2: number,
-  lng2: number
+  lot2: number
 ): number {
   const R = 6_371_000;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dlng = ((lng2 - lng1) * Math.PI) / 180;
+  const dlot = ((lot2 - lot1) * Math.PI) / 180;
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dlng / 2) ** 2;
+      Math.sin(dlot / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 

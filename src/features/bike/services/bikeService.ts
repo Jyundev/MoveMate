@@ -9,7 +9,7 @@ export type TBikeStation = {
   rntstnId: string;
   rntstnNm: string;
   lat: string;
-  lng: string;
+  lot: string; // 경도 (API 필드명 'lot')
   roadNmAddr?: string;
 };
 
@@ -17,7 +17,7 @@ export type TBikeAvailability = {
   rntstnId: string;
   rntstnNm: string;
   lat: string;
-  lng: string;
+  lot: string; // 경도 (API 필드명 'lot')
   bcyclTpkctNocs: string; // 대여 가능 자전거 수
 };
 

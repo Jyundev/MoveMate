@@ -53,8 +53,8 @@ export async function computeRouteRecommendation(
   // 병렬 데이터 조회 (보관함: 허브 근처 + 목적지 근처 동시 조회)
   const [bikeResult, lockerHubResult, lockerDestResult] = await Promise.allSettled([
     getBikeAvailability(),
-    getNearbyLockerAvailability(hub.lat, hub.lng),
-    getNearbyLockerAvailability(dest.lat, dest.lng),
+    getNearbyLockerAvailability(hub.lat, hub.lot),
+    getNearbyLockerAvailability(dest.lat, dest.lot),
   ]);
 
   // ── 자전거 ─────────────────────────────────────────────────────
@@ -72,9 +72,9 @@ export async function computeRouteRecommendation(
     for (const b of bikeData) {
       const d = haversineDistanceM(
         hub.lat,
-        hub.lng,
+        hub.lot,
         parseFloat(b.lat || "0"),
-        parseFloat(b.lng || "0")
+        parseFloat(b.lot || "0")
       );
       if (d < minDist) {
         minDist = d;

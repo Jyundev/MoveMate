@@ -47,3 +47,12 @@ a {
 .overflow-y-scroll {
   -webkit-overflow-scrolling: touch;
 }
+
+/* 스크롤바 숨김 */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
