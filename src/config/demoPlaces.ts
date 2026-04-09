@@ -11,7 +11,7 @@ export type THub = {
   id: string;
   name: string;
   lat: number;
-  lng: number;
+  lot:number;
   districtName: string; // 대표 법정동명
   districtCode: string; // 공공데이터 API 조회용 대표 법정동 코드
 };
@@ -30,7 +30,7 @@ export type TSubDestination = {
   hubId: string;
   distanceM: number;
   lat: number;
-  lng: number;
+  lot:number;
 };
 
 export const HUBS: THub[] = [
@@ -38,7 +38,7 @@ export const HUBS: THub[] = [
     id: "seoul_station",
     name: "서울역",
     lat: 37.555,
-    lng: 126.9723,
+    lot:126.9723,
     districtName: "서울특별시",
     districtCode: "1100000000", // 보관함 API는 시 단위로만 데이터 존재
   },
@@ -46,7 +46,7 @@ export const HUBS: THub[] = [
     id: "gangnam",
     name: "강남역",
     lat: 37.498,
-    lng: 127.0276,
+    lot:127.0276,
     districtName: "서울특별시",
     districtCode: "1100000000", // 보관함 API는 시 단위로만 데이터 존재
   },
@@ -54,7 +54,7 @@ export const HUBS: THub[] = [
     id: "seongsu",
     name: "성수",
     lat: 37.5445,
-    lng: 127.0568,
+    lot:127.0568,
     districtName: "서울특별시",
     districtCode: "1100000000", // 보관함 API는 시 단위로만 데이터 존재
   },
@@ -70,7 +70,7 @@ export const SUB_DESTINATIONS: TSubDestination[] = [
     hubId: "seoul_station",
     distanceM: 1200,
     lat: 37.5635,
-    lng: 126.986,
+    lot:126.986,
   },
   {
     id: "namsan",
@@ -78,7 +78,7 @@ export const SUB_DESTINATIONS: TSubDestination[] = [
     hubId: "seoul_station",
     distanceM: 2000,
     lat: 37.5512,
-    lng: 126.9882,
+    lot:126.9882,
   },
   {
     id: "yongsan",
@@ -86,7 +86,7 @@ export const SUB_DESTINATIONS: TSubDestination[] = [
     hubId: "seoul_station",
     distanceM: 1500,
     lat: 37.5298,
-    lng: 126.9648,
+    lot:126.9648,
   },
 
   // =========================
@@ -98,7 +98,7 @@ export const SUB_DESTINATIONS: TSubDestination[] = [
     hubId: "gangnam",
     distanceM: 800,
     lat: 37.5001,
-    lng: 127.0368,
+    lot:127.0368,
   },
   {
     id: "seocho",
@@ -106,7 +106,7 @@ export const SUB_DESTINATIONS: TSubDestination[] = [
     hubId: "gangnam",
     distanceM: 1000,
     lat: 37.4836,
-    lng: 127.0324,
+    lot:127.0324,
   },
   {
     id: "coex",
@@ -114,7 +114,7 @@ export const SUB_DESTINATIONS: TSubDestination[] = [
     hubId: "gangnam",
     distanceM: 1800,
     lat: 37.5115,
-    lng: 127.059,
+    lot:127.059,
   },
 
   // =========================
@@ -126,7 +126,7 @@ export const SUB_DESTINATIONS: TSubDestination[] = [
     hubId: "seongsu",
     distanceM: 700,
     lat: 37.5443,
-    lng: 127.0374,
+    lot:127.0374,
   },
   {
     id: "cafedistrict",
@@ -134,7 +134,7 @@ export const SUB_DESTINATIONS: TSubDestination[] = [
     hubId: "seongsu",
     distanceM: 400,
     lat: 37.5447,
-    lng: 127.056,
+    lot:127.056,
   },
   {
     id: "ttukseom",
@@ -142,7 +142,7 @@ export const SUB_DESTINATIONS: TSubDestination[] = [
     hubId: "seongsu",
     distanceM: 1200,
     lat: 37.5314,
-    lng: 127.0665,
+    lot:127.0665,
   },
 ];
 

@@ -134,7 +134,7 @@ export default function RouteDetailSheet({
       onClick={onClose}
     >
       <div
-        className="w-full bg-white rounded-t-3xl max-h-[92vh] overflow-y-auto"
+        className="w-full max-w-[480px] mx-auto bg-white rounded-t-3xl max-h-[92vh] overflow-y-auto scrollbar-hide"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 드래그 핸들 */}
