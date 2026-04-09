@@ -77,6 +77,26 @@ function buildSteps(route: TRouteOption, result: TRecommendResult): Step[] {
   }
 
   if (route.mode === 'LOCKER_WALK' && route.locker) {
+    if (route.lockerLocation === 'destination') {
+      return [
+        {
+          icon: <Footprints size={16} className="text-blue-500" />,
+          label: `${hub}에서 출발`,
+          sub: '짐을 들고 목적지로 이동',
+        },
+        {
+          icon: <Package size={16} className="text-purple-500" />,
+          label: `${dest} 도착 후 짐 보관`,
+          sub: `${route.locker.name} · 여유 ${route.locker.availableCount}칸`,
+        },
+        {
+          icon: <CheckCircle size={16} className="text-green-500" />,
+          label: `${dest} 자유 탐방`,
+          sub: `목표 도착 ${route.targetArrivalTime}`,
+        },
+      ];
+    }
+    // hub variant (기본)
     return [
       {
         icon: <Package size={16} className="text-blue-500" />,

@@ -9,6 +9,7 @@ export const RouteInputSchema = z.object({
     .optional()
     .or(z.literal('')),
   hasLuggage: z.boolean(),
+  lockerPreference: z.enum(['hub', 'destination', 'recommend']).optional(),
   preferLessWalking: z.boolean(),
 });
 

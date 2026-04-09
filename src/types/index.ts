@@ -1,8 +1,12 @@
+export type TLockerPreference = 'hub' | 'destination' | 'recommend';
+
 export type TRouteInput = {
   hubId: string;         // 도착 거점 ID (서울역/강남역/성수)
   destinationId: string; // 최종 목적지 ID
   arrivalTime?: string;  // "HH:mm" (선택)
   hasLuggage: boolean;
+  /** hasLuggage=true일 때만 유효: 짐 보관 위치 선호 */
+  lockerPreference?: TLockerPreference;
   preferLessWalking: boolean;
 };
 
@@ -39,6 +43,8 @@ export type TRouteOption = {
   stability: TAvailability;
   /** 가능하더라도 실제 이동에서 꼬일 가능성 — 실패할 수 있는지 */
   failRisk: TFailRisk;
+  /** LOCKER_WALK 전용: 보관함 위치 (허브 근처 vs 목적지 근처) */
+  lockerLocation?: 'hub' | 'destination';
   reason: string;
   score: number;
   bike?: TBikeInfo & { availability: TAvailability };

@@ -110,7 +110,8 @@ export default function RouteCard({ route, rank, onClick }: Props) {
             <div className="flex items-center gap-2 text-[12px] text-gray-600">
               <Package size={13} className="text-gray-400 shrink-0" />
               <span>
-                보관함 <strong>{route.locker.availableCount}칸</strong> 여유
+                {route.lockerLocation === 'destination' ? '목적지' : '거점'} 근처 보관함{' '}
+                <strong>{route.locker.availableCount}칸</strong> 여유
               </span>
               <AvailabilityDot value={route.locker.availability} />
             </div>
