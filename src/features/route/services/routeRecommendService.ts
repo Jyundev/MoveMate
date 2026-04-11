@@ -56,19 +56,14 @@ export async function computeRouteRecommendation(
     ]);
   }
 
-  const t0 = Date.now();
   const [bikeResult, lockerRawResult] = await Promise.allSettled([
     withTimeout(getBikeAvailability()),
     withTimeout(getAllLockerData()),
   ]);
-  console.log(`[공공API] bike=${bikeResult.status} locker=${lockerRawResult.status} (${Date.now() - t0}ms)`);
-  if (bikeResult.status === "rejected") console.error("[공공API] bike 오류:", bikeResult.reason);
-  if (lockerRawResult.status === "rejected") console.error("[공공API] locker 오류:", lockerRawResult.reason);
 
   const allLockers = lockerRawResult.status === "fulfilled" ? lockerRawResult.value : [];
   const lockerHubResult = filterNearbyLockers(allLockers, hub.lat, hub.lot);
   const lockerDestResult = filterNearbyLockers(allLockers, dest.lat, dest.lot);
-  console.log(`[공공API] nearbyHub=${lockerHubResult.nearby.length} nearbyDest=${lockerDestResult.nearby.length} bikeStations=${bikeResult.status === "fulfilled" ? bikeResult.value.length : 0}`);
 
   // ── 자전거 ─────────────────────────────────────────────────────
   const bikeData = bikeResult.status === "fulfilled" ? bikeResult.value : [];
@@ -425,7 +420,7 @@ export async function computeRouteRecommendation(
   });
 
   // ── AI 설명 강화 ──────────────────────────────────────────────
-  // rule-based reason을 fallback으로 유지하면서 Claude API로 자연어 설명 보강
+  // rule-based reason을 fallback으로 유지하면서 OpenAI로 자연어 설명 보강
   const aiContexts: AiReasonContext[] = routes.map((r, idx) => ({
     mode: r.mode,
     lockerLocation: r.lockerLocation,

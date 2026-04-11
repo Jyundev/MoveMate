@@ -15,7 +15,6 @@ export async function POST(req: NextRequest) {
 
     const { hubId, destinationId, hasLuggage, lockerPreference, preferLessWalking } = parsed.data;
 
-    const start = Date.now();
     const result = await computeRouteRecommendation(
       hubId,
       destinationId,
@@ -23,7 +22,6 @@ export async function POST(req: NextRequest) {
       preferLessWalking,
       lockerPreference,
     );
-    console.log(`[route-recommend] 완료 ${Date.now() - start}ms | routes: ${result.routes.length}`);
 
     return NextResponse.json({ ok: true, data: result });
   } catch (err) {
