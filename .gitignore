@@ -40,6 +40,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Capacitor
+ios/App/Pods/
+ios/App/App/public/
+android/.gradle/
+android/app/src/main/assets/public/
+android/build/
+android/app/build/
+
 CLAUDE.md
 
 # IDE
