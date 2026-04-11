@@ -7,9 +7,9 @@ import RouteDetailSheet from '@/features/route/components/RouteDetailSheet';
 import RouteInputForm from '@/features/route/components/RouteInputForm';
 import { useRouteRecommend } from '@/features/route/hooks/useRouteRecommend';
 import type { TRouteInput, TRouteOption } from '@/types';
-import { ArrowLeft, Briefcase, Clock, Footprints } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Bike, Briefcase, Clock, Footprints, Package } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useState } from 'react';
+import { startTransition, useCallback, useEffect, useState } from 'react';
 
 const MapView = dynamic(
   () => import('@/features/route/components/MapView'),
@@ -30,7 +30,7 @@ export default function HomePage() {
   // 데이터 또는 에러 도착 시 dataReady 설정
   useEffect(() => {
     if (!isFetching && isAnalyzing && (data || isError)) {
-      setDataReady(true);
+      startTransition(() => setDataReady(true));
     }
   }, [isFetching, isAnalyzing, data, isError]);
 
@@ -178,6 +178,21 @@ export default function HomePage() {
               />
             ))}
 
+          {/* 실시간 데이터 일부 불안정 배너 */}
+          {data && !isFetching && (!data.dataStatus.bikeApiOk || !data.dataStatus.lockerApiOk) && (
+            <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+              <AlertTriangle size={15} className="text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[12px] font-semibold text-amber-700">
+                  일부 실시간 데이터가 일시적으로 불안정합니다
+                </p>
+                <p className="text-[11px] text-amber-600 mt-0.5">
+                  제한된 전략만 제공됩니다. 그래도 현재 조건의 최적 선택은 제공합니다.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* 결과 카드 (상위 3개만 노출) */}
           {data &&
             !isFetching &&
@@ -189,6 +204,40 @@ export default function HomePage() {
                 onClick={setSelectedRoute}
               />
             ))}
+
+          {/* 데이터 조회 실패 전략 안내 */}
+          {data && !isFetching && (
+            <>
+              {!data.dataStatus.bikeApiOk && (
+                <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3">
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
+                    <Bike size={15} className="text-gray-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium text-gray-500">자전거 전략</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">현재 공영자전거 데이터 조회 실패</p>
+                  </div>
+                  <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full shrink-0">
+                    일시 불안정
+                  </span>
+                </div>
+              )}
+              {!data.dataStatus.lockerApiOk && (
+                <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3">
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
+                    <Package size={15} className="text-gray-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium text-gray-500">보관함 전략</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">현재 보관함 데이터 조회 실패</p>
+                  </div>
+                  <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full shrink-0">
+                    일시 불안정
+                  </span>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Bike, Footprints, MapPin, Zap } from 'lucide-react';
+import { Bike, Footprints, MapPin, Zap } from "lucide-react";
 
 type Props = {
   onStart: () => void;
@@ -19,10 +19,11 @@ export default function OnboardingScreen({ onStart }: Props) {
             MoveMate
           </h1>
           <p className="mt-4 text-[16px] text-gray-500 leading-relaxed">
-            서울 도착 후,{' '}
-            <span className="text-gray-800 font-medium">마지막 이동</span>을{' '}
+            서울 도착 후,
             <br />
-            가장 덜 불편하게 안내해드릴게요
+            <span className="text-gray-800 font-medium">
+              지금 상황에 맞는 이동 전략을 찾아드릴게요
+            </span>
           </p>
         </div>
 
@@ -43,8 +44,9 @@ export default function OnboardingScreen({ onStart }: Props) {
           <FeatureItem
             icon={<Footprints size={22} className="text-green-500" />}
             bg="bg-green-50"
-            title="내 조건에 맞는 추천"
-            description="짐 유무, 도보 선호도를 반영해 나에게 맞는 이동 방법을 추천해드려요."
+            title="상황에 맞는 이동 전략 추천"
+            description="짐 유무와 도보 선호를 반영해 지금 가장 적절한 이동 방법을 추천해드려요."
+            highlight={true}
           />
         </div>
 
@@ -52,12 +54,12 @@ export default function OnboardingScreen({ onStart }: Props) {
         <div className="pb-14 pt-10">
           <button
             onClick={onStart}
-            className="w-full py-4 bg-blue-500 text-white text-[16px] font-semibold rounded-2xl active:bg-blue-700 active:scale-[0.98] transition-all shadow-sm"
+            className="w-full py-4 bg-blue-500 text-white text-[16px] font-semibold rounded-2xl active:bg-blue-600 active:scale-[0.98] transition-all shadow-sm"
           >
             이동 경로 추천받기
           </button>
           <p className="text-center text-[12px] text-gray-400 mt-3">
-            서울역 · 강남역 · 성수 거점 지원
+            현재 서울역 · 강남역 · 성수역 중심으로 지원해요
           </p>
         </div>
       </div>
@@ -70,14 +72,20 @@ function FeatureItem({
   bg,
   title,
   description,
+  highlight = false,
 }: {
   icon: React.ReactNode;
   bg: string;
   title: string;
   description: string;
+  highlight?: boolean;
 }) {
   return (
-    <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl">
+    <div
+      className={`flex items-start gap-4 p-4 rounded-2xl border ${
+        highlight ? "bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-100"
+      }`}
+    >
       <div
         className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center shrink-0`}
       >

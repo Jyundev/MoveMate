@@ -453,6 +453,10 @@ export async function computeRouteRecommendation(
     targetArrivalTime: routes[0].targetArrivalTime,
     hubName: hub.name,
     destinationName: dest.name,
+    dataStatus: {
+      bikeApiOk: bikeResult.status === "fulfilled",
+      lockerApiOk: lockerRawResult.status === "fulfilled",
+    },
   };
 }
 

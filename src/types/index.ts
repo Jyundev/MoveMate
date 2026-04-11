@@ -50,10 +50,16 @@ export type TRouteOption = {
   locker?: TLockerInfo & { availability: TAvailability };
 };
 
+export type TDataStatus = {
+  bikeApiOk: boolean;
+  lockerApiOk: boolean;
+};
+
 export type TRecommendResult = {
   routes: TRouteOption[];
   /** 사용자가 설정한 목표 도착 시각 (미설정 시 1순위 경로 기준 예상 도착 시각) */
   targetArrivalTime: string;
   hubName: string;
   destinationName: string;
+  dataStatus: TDataStatus;
 };
