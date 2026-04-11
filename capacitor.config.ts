@@ -1,16 +1,16 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'com.movemate.app',
-  appName: 'MoveMate',
-  webDir: 'out',
+  appId: "com.movemate.app",
+  appName: "MoveMate",
+  webDir: "out",
   // server.url 설정 시 로컬 번들 대신 배포된 URL을 WebView로 로드
   server: {
-    url: 'https://move-mate-nine.vercel.app',
+    url: "https://move-mate-nine.vercel.app",
     cleartext: false,
   },
   ios: {
-    contentInset: 'automatic',
+    contentInset: "automatic",
   },
   android: {
     allowMixedContent: false,
