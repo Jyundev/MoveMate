@@ -2,7 +2,6 @@
 
 import { HUBS, getSubDestinations } from '@/config/demoPlaces';
 import { RouteInputSchema } from '@/features/route/schemas/route.schema';
-import TimePickerSheet from '@/features/route/components/TimePickerSheet';
 import type { TLockerPreference, TRouteInput } from '@/types';
 import { useState } from 'react';
 
@@ -11,14 +10,9 @@ type Props = {
   isLoading: boolean;
 };
 
-type TimeMode = 'now' | 'set';
-
 export default function RouteInputForm({ onSubmit, isLoading }: Props) {
   const [hubId, setHubId] = useState('');
   const [destinationId, setDestinationId] = useState('');
-  const [timeMode, setTimeMode] = useState<TimeMode>('now');
-  const [arrivalTime, setArrivalTime] = useState('');
-  const [showPicker, setShowPicker] = useState(false);
   const [hasLuggage, setHasLuggage] = useState<boolean | null>(null);
   const [lockerPreference, setLockerPreference] = useState<TLockerPreference | null>(null);
   const [preferLessWalking, setPreferLessWalking] = useState<boolean | null>(null);
@@ -48,7 +42,6 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
     const result = RouteInputSchema.safeParse({
       hubId,
       destinationId,
-      arrivalTime: timeMode === 'set' ? arrivalTime : '',
       hasLuggage: hasLuggage ?? false,
       lockerPreference: hasLuggage ? (lockerPreference ?? undefined) : undefined,
       preferLessWalking: preferLessWalking ?? false,
@@ -172,58 +165,6 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
           ))}
         </div>
       </div>
-
-      {/* 5. 도착 시간 — TODO: arrivalTime이 전략 순위(score)에 반영되지 않아 주석 처리
-           복구 시: score 계산에 시간 촉박도 가중치 추가 후 활성화
-      <div className="space-y-2.5">
-        <p className="text-[15px] font-semibold text-gray-800">
-          시간 맞춰 이동할까요?{' '}
-          <span className="text-[13px] font-normal text-gray-400">선택</span>
-        </p>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => { setTimeMode('now'); setArrivalTime(''); }}
-            className={segClass(timeMode === 'now')}
-          >
-            지금 바로
-          </button>
-          <button
-            type="button"
-            onClick={() => setTimeMode('set')}
-            className={segClass(timeMode === 'set')}
-          >
-            시간 맞추기
-          </button>
-        </div>
-        {timeMode === 'set' && (
-          <button
-            type="button"
-            onClick={() => setShowPicker(true)}
-            className="w-full flex items-center justify-between px-4 py-4 rounded-xl border border-gray-200 bg-white active:bg-gray-50 transition"
-          >
-            <span className="text-[13px] text-gray-500">도착 희망 시간</span>
-            <span className={`text-[15px] font-semibold ${arrivalTime ? 'text-blue-500' : 'text-gray-400'}`}>
-              {arrivalTime
-                ? (() => {
-                    const [h, m] = arrivalTime.split(':').map(Number);
-                    const period = h < 12 ? '오전' : '오후';
-                    const hour = h % 12 || 12;
-                    return `${period} ${String(hour).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-                  })()
-                : '시간 선택'}
-            </span>
-          </button>
-        )}
-      </div>
-      {showPicker && (
-        <TimePickerSheet
-          value={arrivalTime}
-          onConfirm={(v) => setArrivalTime(v)}
-          onClose={() => setShowPicker(false)}
-        />
-      )}
-      */}
 
       <button
         type="submit"

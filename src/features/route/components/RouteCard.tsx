@@ -14,6 +14,7 @@ const MODE_ICON: Record<TTransportMode, React.ReactNode> = {
   WALK: <Footprints size={20} />,
   BIKE: <Bike size={20} />,
   LOCKER_WALK: <Package size={20} />,
+  LOCKER_BIKE: <Package size={20} />,
 };
 
 const STABILITY_LABEL: Record<TAvailability, { label: string; className: string }> = {
@@ -30,6 +31,7 @@ const FAIL_RISK_LABEL: Record<TFailRisk, { label: string; className: string; dot
 
 function getActionLabel(route: TRouteOption): string {
   if (route.mode === "BIKE") return "자전거로 빠르게 이동";
+  if (route.mode === "LOCKER_BIKE") return "짐 보관 후 자전거로 이동";
   if (route.mode === "LOCKER_WALK") {
     return route.lockerLocation === "destination"
       ? "이동 후 목적지에서 짐 보관"
@@ -47,6 +49,10 @@ function getFailRiskReason(route: TRouteOption): string | null {
   if (route.mode === "LOCKER_WALK" && route.locker) {
     if (route.failRisk === "HIGH") return "보관함 여석 부족으로 이용 불가 가능성";
     return "보관함 여석이 적어 이용 불가 가능성";
+  }
+  if (route.mode === "LOCKER_BIKE") {
+    if (route.failRisk === "HIGH") return "자전거 또는 보관함 이용 불가 가능성";
+    return "자전거·보관함 중 하나가 부족할 수 있음";
   }
   return null;
 }

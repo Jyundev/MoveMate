@@ -19,12 +19,14 @@ const MODE_LABEL = {
   WALK: "도보 이동",
   BIKE: "자전거 이용",
   LOCKER_WALK: "보관함 후 이동",
+  LOCKER_BIKE: "짐 보관 후 자전거 이동",
 };
 
 const MODE_COLOR = {
   WALK: "#22c55e",
   BIKE: "#3b82f6",
   LOCKER_WALK: "#a855f7",
+  LOCKER_BIKE: "#f97316",
 };
 
 export default function MapView({
