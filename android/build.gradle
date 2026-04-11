@@ -23,10 +23,13 @@ allprojects {
         mavenCentral()
     }
     // kotlin-stdlib 1.8+에 jdk7/jdk8이 통합되어 발생하는 중복 클래스 해결
+    // kotlin-build-tools 등 다른 kotlin 패키지는 건드리지 않도록 stdlib만 대상으로 지정
     configurations.all {
         resolutionStrategy.eachDependency {
-            if (it.requested.group == 'org.jetbrains.kotlin') {
-                it.useVersion '1.8.22'
+            if (it.requested.group == 'org.jetbrains.kotlin' &&
+                (it.requested.name == 'kotlin-stdlib-jdk7' ||
+                 it.requested.name == 'kotlin-stdlib-jdk8')) {
+                it.useTarget "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
             }
         }
     }
