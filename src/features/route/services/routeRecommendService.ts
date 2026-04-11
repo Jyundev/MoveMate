@@ -17,6 +17,10 @@ import type {
   TRouteOption,
   TTransportMode,
 } from "@/types";
+import {
+  type AiReasonContext,
+  generateAiReasons,
+} from "@/features/route/services/aiReasonService";
 
 function toAvailability(
   count: number,
@@ -355,8 +359,35 @@ export async function computeRouteRecommendation(
     }
   });
 
+  // ── AI 설명 강화 ──────────────────────────────────────────────
+  // rule-based reason을 fallback으로 유지하면서 Claude API로 자연어 설명 보강
+  const aiContexts: AiReasonContext[] = routes.map((r, idx) => ({
+    mode: r.mode,
+    lockerLocation: r.lockerLocation,
+    totalMinutes: r.totalMinutes,
+    walkDistM,
+    hasLuggage,
+    preferLessWalking,
+    bikeCount: r.bike?.availableCount,
+    bikeStationName: r.bike?.stationName,
+    bikeDistanceM: r.bike?.distanceM,
+    lockerCount: r.locker?.availableCount,
+    lockerName: r.locker?.name,
+    lockerDistanceM: r.locker?.distanceM,
+    hubName: hub.name,
+    destinationName: dest.name,
+    rank: idx + 1,
+  }));
+
+  const aiReasons = await generateAiReasons(aiContexts);
+
+  const enhancedRoutes = routes.map((r, i) => ({
+    ...r,
+    reason: aiReasons[i] ?? r.reason,
+  }));
+
   return {
-    routes,
+    routes: enhancedRoutes,
     targetArrivalTime: hasTargetTime
       ? targetArrivalTime
       : routes[0].targetArrivalTime,
