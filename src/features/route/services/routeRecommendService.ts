@@ -1,6 +1,6 @@
 import { findHub, findSubDestination } from "@/config/demoPlaces";
 import { getBikeAvailability } from "@/features/bike/services/bikeService";
-import { getNearbyLockerAvailability } from "@/features/locker/services/lockerService";
+import { getAllLockerData, filterNearbyLockers } from "@/features/locker/services/lockerService";
 import {
   bikeMinutes,
   haversineDistanceM,
@@ -44,12 +44,31 @@ export async function computeRouteRecommendation(
 
   const departureBase = nowHHmm();
 
-  // 병렬 데이터 조회 (보관함: 허브 근처 + 목적지 근처 동시 조회)
-  const [bikeResult, lockerHubResult, lockerDestResult] = await Promise.allSettled([
-    getBikeAvailability(),
-    getNearbyLockerAvailability(hub.lat, hub.lot),
-    getNearbyLockerAvailability(dest.lat, dest.lot),
+  // 병렬 데이터 조회 — 보관함 원본은 한 번만 가져오고, 허브/목적지 필터링은 메모리에서 처리
+  // 8초 타임아웃: fetch signal 대신 Promise.race로 처리 (next: { revalidate } 충돌 방지)
+  const API_TIMEOUT_MS = 8000;
+  function withTimeout<T>(p: Promise<T>): Promise<T> {
+    return Promise.race([
+      p,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error("공공API 타임아웃")), API_TIMEOUT_MS)
+      ),
+    ]);
+  }
+
+  const t0 = Date.now();
+  const [bikeResult, lockerRawResult] = await Promise.allSettled([
+    withTimeout(getBikeAvailability()),
+    withTimeout(getAllLockerData()),
   ]);
+  console.log(`[공공API] bike=${bikeResult.status} locker=${lockerRawResult.status} (${Date.now() - t0}ms)`);
+  if (bikeResult.status === "rejected") console.error("[공공API] bike 오류:", bikeResult.reason);
+  if (lockerRawResult.status === "rejected") console.error("[공공API] locker 오류:", lockerRawResult.reason);
+
+  const allLockers = lockerRawResult.status === "fulfilled" ? lockerRawResult.value : [];
+  const lockerHubResult = filterNearbyLockers(allLockers, hub.lat, hub.lot);
+  const lockerDestResult = filterNearbyLockers(allLockers, dest.lat, dest.lot);
+  console.log(`[공공API] nearbyHub=${lockerHubResult.nearby.length} nearbyDest=${lockerDestResult.nearby.length} bikeStations=${bikeResult.status === "fulfilled" ? bikeResult.value.length : 0}`);
 
   // ── 자전거 ─────────────────────────────────────────────────────
   const bikeData = bikeResult.status === "fulfilled" ? bikeResult.value : [];
@@ -89,17 +108,8 @@ export async function computeRouteRecommendation(
   const bikeAvailability: TAvailability = toAvailability(bikeCount, 3, 10);
 
   // ── 보관함 ─────────────────────────────────────────────────────
-  const lockerHubData =
-    lockerHubResult.status === "fulfilled"
-      ? lockerHubResult.value
-      : { nearby: [], totalAvailable: 0 };
-  const lockerDestData =
-    lockerDestResult.status === "fulfilled"
-      ? lockerDestResult.value
-      : { nearby: [], totalAvailable: 0 };
-
-  const { nearby: nearbyLockersHub, totalAvailable: totalLockersHub } = lockerHubData;
-  const { nearby: nearbyLockersDest, totalAvailable: totalLockersDest } = lockerDestData;
+  const { nearby: nearbyLockersHub, totalAvailable: totalLockersHub } = lockerHubResult;
+  const { nearby: nearbyLockersDest, totalAvailable: totalLockersDest } = lockerDestResult;
 
   const lockerHubAvailability: TAvailability = toAvailability(totalLockersHub, 3, 10);
   const lockerDestAvailability: TAvailability = toAvailability(totalLockersDest, 3, 10);

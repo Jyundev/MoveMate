@@ -31,7 +31,10 @@ export async function fetchPublicApi<T>(
   searchParams.delete('_numOfRows');
 
   const url = `${baseUrl}${endpoint}?${searchParams.toString()}`;
-  const res = await fetch(url, { cache: 'no-store' });
+
+  const res = await fetch(url, {
+    next: { revalidate: 60 }, // 60초 캐시 — 재요청 시 정부 API 스킵
+  });
 
   if (!res.ok) {
     throw new Error(`Public API HTTP error: ${res.status} ${endpoint}`);
