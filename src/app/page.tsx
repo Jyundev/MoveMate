@@ -60,9 +60,9 @@ export default function HomePage() {
               <ArrowLeft size={16} />
               <span className="text-[13px]">홈으로</span>
             </button>
-            <h1 className="text-[22px] font-bold text-gray-900">이동 정보 입력</h1>
+            <h1 className="text-[22px] font-bold text-gray-900">지금 상황을 알려주세요</h1>
             <p className="mt-1 text-[13px] text-gray-400">
-              입력하신 조건에 맞는 경로를 추천해드려요
+              조건에 맞는 최적 이동 전략을 분석해드릴게요
             </p>
           </header>
 
@@ -98,6 +98,25 @@ export default function HomePage() {
               <p className="mt-0.5 text-[13px] text-gray-400">
                 추천 경로 {data.routes.length}가지
               </p>
+              {input && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {input.hasLuggage && (
+                    <span className="text-[11px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-100 font-medium">
+                      🧳 짐 있음
+                    </span>
+                  )}
+                  {input.preferLessWalking && (
+                    <span className="text-[11px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-100 font-medium">
+                      🚶 도보 최소화
+                    </span>
+                  )}
+                  {data.targetArrivalTime && (
+                    <span className="text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-100 font-medium">
+                      ⏰ {data.targetArrivalTime} 도착 목표
+                    </span>
+                  )}
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -140,6 +159,7 @@ export default function HomePage() {
                 route={route}
                 rank={idx + 1}
                 onClick={setSelectedRoute}
+                onShowMap={(r) => { setSelectedRoute(r); setView('map'); }}
               />
             ))}
         </div>
