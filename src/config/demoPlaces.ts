@@ -1,6 +1,6 @@
 /**
  * 허브(Hub)
- * - 사용자가 출발/환승 거점으로 선택하는 주요 지역
+ * - 사용자가 서울 도착 이후 마지막 이동을 시작하는 주요 거점
  * - name: 화면에 표시되는 사용자 친화적 허브명 (생활권 기준)
  * - districtCode: 공영 물품보관함 API용 지자체코드.
  *                 실제 데이터는 모두 서울특별시(1100000000) 단위로 등록되어 있어
@@ -19,7 +19,7 @@ export type THub = {
 /**
  * 서브 목적지(SubDestination)
  * - 허브에서 최종 도착지까지 연결되는 주요 목적지 후보
- * - distanceM: 허브 기준 도보 이동 거리(데모용 기준값)
+ * - distanceM: 허브에서 목적지까지의 기준 이동 거리(데모용 추정값)
  *
  * ※ distanceM은 현재 시연용 추정값이며,
  * 실제 운영 시에는 좌표 기반 거리 계산 또는 지도 API 기반 보정 필요
@@ -52,7 +52,7 @@ export const HUBS: THub[] = [
   },
   {
     id: "seongsu",
-    name: "성수",
+    name: "성수역",
     lat: 37.5445,
     lot:127.0568,
     districtName: "서울특별시",
@@ -63,6 +63,7 @@ export const HUBS: THub[] = [
 export const SUB_DESTINATIONS: TSubDestination[] = [
   // =========================
   // 서울역 허브 기반 목적지
+  // 전략 갈림 거리대(800~1200m) + 짐 보관 선택이 드러나는 목적지
   // =========================
   {
     id: "myeongdong",
@@ -70,55 +71,57 @@ export const SUB_DESTINATIONS: TSubDestination[] = [
     hubId: "seoul_station",
     distanceM: 1200,
     lat: 37.5635,
-    lot:126.986,
+    lot: 126.986,
   },
   {
-    id: "namsan",
-    name: "남산",
+    id: "city_hall",
+    name: "시청",
     hubId: "seoul_station",
-    distanceM: 2000,
-    lat: 37.5512,
-    lot:126.9882,
+    distanceM: 900,
+    lat: 37.5663,
+    lot: 126.9779,
   },
   {
-    id: "yongsan",
-    name: "용산",
+    id: "namdaemun",
+    name: "남대문시장",
     hubId: "seoul_station",
-    distanceM: 1500,
-    lat: 37.5298,
-    lot:126.9648,
+    distanceM: 800,
+    lat: 37.5598,
+    lot: 126.9769,
   },
 
   // =========================
   // 강남역 허브 기반 목적지
+  // 시간 맞춤·자전거 전략이 잘 드러나는 목적지
   // =========================
   {
     id: "yeoksam",
-    name: "역삼동",
+    name: "역삼 업무지구",
     hubId: "gangnam",
     distanceM: 800,
     lat: 37.5001,
-    lot:127.0368,
+    lot: 127.0368,
   },
   {
     id: "seocho",
-    name: "서초동",
+    name: "서초 일대",
     hubId: "gangnam",
     distanceM: 1000,
     lat: 37.4836,
-    lot:127.0324,
+    lot: 127.0324,
   },
   {
     id: "coex",
     name: "COEX",
     hubId: "gangnam",
-    distanceM: 1800,
+    distanceM: 1400,
     lat: 37.5115,
-    lot:127.059,
+    lot: 127.059,
   },
 
   // =========================
-  // 성수 허브 기반 목적지
+  // 성수역 허브 기반 목적지
+  // 도보 vs 자전거 선택이 잘 드러나는 목적지
   // =========================
   {
     id: "seoulforest",
@@ -126,15 +129,15 @@ export const SUB_DESTINATIONS: TSubDestination[] = [
     hubId: "seongsu",
     distanceM: 700,
     lat: 37.5443,
-    lot:127.0374,
+    lot: 127.0374,
   },
   {
     id: "cafedistrict",
     name: "성수 카페거리",
     hubId: "seongsu",
-    distanceM: 400,
+    distanceM: 800,
     lat: 37.5447,
-    lot:127.056,
+    lot: 127.056,
   },
   {
     id: "ttukseom",
@@ -142,7 +145,7 @@ export const SUB_DESTINATIONS: TSubDestination[] = [
     hubId: "seongsu",
     distanceM: 1200,
     lat: 37.5314,
-    lot:127.0665,
+    lot: 127.0665,
   },
 ];
 

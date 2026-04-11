@@ -1,6 +1,7 @@
 'use client';
 
 import OnboardingScreen from '@/features/onboarding/components/OnboardingScreen';
+import LoadingScreen from '@/features/route/components/LoadingScreen';
 import RouteCard from '@/features/route/components/RouteCard';
 import RouteDetailSheet from '@/features/route/components/RouteDetailSheet';
 import RouteInputForm from '@/features/route/components/RouteInputForm';
@@ -8,7 +9,7 @@ import { useRouteRecommend } from '@/features/route/hooks/useRouteRecommend';
 import type { TRouteInput, TRouteOption } from '@/types';
 import { ArrowLeft } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const MapView = dynamic(
   () => import('@/features/route/components/MapView'),
@@ -21,12 +22,28 @@ export default function HomePage() {
   const [view, setView] = useState<View>('onboarding');
   const [input, setInput] = useState<TRouteInput | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<TRouteOption | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [dataReady, setDataReady] = useState(false);
 
   const { data, isFetching, isError, error } = useRouteRecommend(input);
+
+  // 데이터 또는 에러 도착 시 dataReady 설정
+  useEffect(() => {
+    if (!isFetching && isAnalyzing && (data || isError)) {
+      setDataReady(true);
+    }
+  }, [isFetching, isAnalyzing, data, isError]);
+
+  const handleTransition = useCallback(() => {
+    setIsAnalyzing(false);
+    setDataReady(false);
+  }, []);
 
   const handleSubmit = (formInput: TRouteInput) => {
     setSelectedRoute(null);
     setInput(formInput);
+    setIsAnalyzing(true);
+    setDataReady(false);
     setView('result');
   };
 
@@ -77,7 +94,18 @@ export default function HomePage() {
     );
   }
 
-  // ── 결과 화면 ────────────────────────────────────────────────────
+  // ── 의사결정 로딩 화면 ───────────────────────────────────────────
+  if (view === 'result' && isAnalyzing && input) {
+    return (
+      <LoadingScreen
+        input={input}
+        isReady={dataReady}
+        onTransition={handleTransition}
+      />
+    );
+  }
+
+  // ── 결과 화면 ─────────────────────────────��──────────────────────
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <div className="mx-auto w-full max-w-[480px] flex flex-col min-h-screen">

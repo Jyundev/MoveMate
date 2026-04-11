@@ -26,6 +26,13 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
 
   const subDestinations = getSubDestinations(hubId);
 
+  const isFormReady =
+    hubId !== '' &&
+    destinationId !== '' &&
+    hasLuggage !== null &&
+    (hasLuggage === false || lockerPreference !== null) &&
+    preferLessWalking !== null;
+
   const handleHubChange = (id: string) => {
     setHubId(id);
     setDestinationId('');
@@ -166,7 +173,8 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
         </div>
       </div>
 
-      {/* 5. 도착 시간 (선택) */}
+      {/* 5. 도착 시간 — TODO: arrivalTime이 전략 순위(score)에 반영되지 않아 주석 처리
+           복구 시: score 계산에 시간 촉박도 가중치 추가 후 활성화
       <div className="space-y-2.5">
         <p className="text-[15px] font-semibold text-gray-800">
           시간 맞춰 이동할까요?{' '}
@@ -188,7 +196,6 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
             시간 맞추기
           </button>
         </div>
-
         {timeMode === 'set' && (
           <button
             type="button"
@@ -209,7 +216,6 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
           </button>
         )}
       </div>
-
       {showPicker && (
         <TimePickerSheet
           value={arrivalTime}
@@ -217,14 +223,17 @@ export default function RouteInputForm({ onSubmit, isLoading }: Props) {
           onClose={() => setShowPicker(false)}
         />
       )}
+      */}
 
       <button
         type="submit"
-        disabled={isLoading}
-        className="w-full py-4 rounded-xl bg-blue-500 text-white font-semibold text-[15px]
-                   transition active:bg-blue-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={!isFormReady || isLoading}
+        className="w-full py-4 rounded-xl font-semibold text-[15px] transition active:scale-[0.98]
+                   disabled:cursor-not-allowed
+                   enabled:bg-blue-500 enabled:text-white enabled:active:bg-blue-700
+                   disabled:bg-gray-100 disabled:text-gray-400"
       >
-        {isLoading ? '추천 계산 중...' : '추천받기'}
+        {isLoading ? '추천 계산 중...' : isFormReady ? '추천받기' : '항목을 모두 선택해주세요'}
       </button>
     </form>
   );
