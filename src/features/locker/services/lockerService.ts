@@ -88,7 +88,6 @@ export async function getNearbyLockerAvailability(
     const medium = parseInt(rt?.usePsbltyMdmszStlckCnt ?? "0", 10);
     const small = parseInt(rt?.usePsbltySmlszStlckCnt ?? "0", 10);
 
-    console.log("rt ", rt);
     nearby.push({
       stlckId: info.stlckId,
       name: info.stlckRprsPstnNm ?? info.sggNm ?? "인근 보관함",

@@ -1,9 +1,8 @@
 export type TLockerPreference = 'hub' | 'destination' | 'recommend';
 
 export type TRouteInput = {
-  hubId: string;         // 도착 거점 ID (서울역/강남역/성수)
-  destinationId: string; // 최종 목적지 ID
-  arrivalTime?: string;  // "HH:mm" (선택)
+  hubId: string;
+  destinationId: string;
   hasLuggage: boolean;
   /** hasLuggage=true일 때만 유효: 짐 보관 위치 선호 */
   lockerPreference?: TLockerPreference;
@@ -15,7 +14,7 @@ export type TAvailability = 'HIGH' | 'MEDIUM' | 'LOW';
 /** 이 전략이 실제 이동에서 꼬일 가능성 */
 export type TFailRisk = 'LOW' | 'MEDIUM' | 'HIGH';
 
-export type TTransportMode = 'WALK' | 'BIKE' | 'LOCKER_WALK';
+export type TTransportMode = 'WALK' | 'BIKE' | 'LOCKER_WALK' | 'LOCKER_BIKE';
 
 export type TBikeInfo = {
   stationName: string;
