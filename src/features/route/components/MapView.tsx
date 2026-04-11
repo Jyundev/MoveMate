@@ -281,7 +281,7 @@ export default function MapView({
               />
               {route.mode !== "WALK" && (
                 <p className="text-[11px] text-gray-400 ml-auto">
-                  점선 = {route.mode === "BIKE" ? "자전거" : "도보"} 구간
+                  점선 = {route.mode === "LOCKER_WALK" ? "도보" : "자전거"} 구간
                 </p>
               )}
             </div>

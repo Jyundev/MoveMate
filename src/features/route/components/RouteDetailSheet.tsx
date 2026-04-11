@@ -17,7 +17,7 @@ type Props = {
   result: TRecommendResult;
   rank: number;
   onClose: () => void;
-  onShowMap: () => void;
+  onShowMap: (route: TRouteOption) => void;
 };
 
 type Step = {
@@ -116,6 +116,32 @@ function buildSteps(route: TRouteOption, result: TRecommendResult): Step[] {
     ];
   }
 
+  if (route.mode === 'LOCKER_BIKE' && route.locker && route.bike) {
+    const rideMin = route.totalMinutes - route.walkMinutes - 5; // 총 - 도보 - 보관 5분
+    return [
+      {
+        icon: <Package size={16} className="text-orange-500" />,
+        label: `${hub}에서 짐 보관`,
+        sub: `${route.locker.name} · 여유 ${route.locker.availableCount}칸`,
+      },
+      {
+        icon: <Bike size={16} className="text-orange-500" />,
+        label: `${route.bike.stationName} 자전거 대여`,
+        sub: `거점에서 ${route.bike.distanceM}m · 잔여 ${route.bike.availableCount}대`,
+      },
+      {
+        icon: <ArrowRight size={16} className="text-gray-400" />,
+        label: `자전거로 ${dest}까지 이동`,
+        sub: `약 ${rideMin > 0 ? rideMin : route.totalMinutes}분 소요`,
+      },
+      {
+        icon: <CheckCircle size={16} className="text-green-500" />,
+        label: `${dest} 도착`,
+        sub: `목표 도착 ${route.targetArrivalTime}`,
+      },
+    ];
+  }
+
   return [];
 }
 
@@ -155,7 +181,7 @@ export default function RouteDetailSheet({
 
         <div className="px-5 py-4 space-y-5">
           {/* 루트 카드 요약 */}
-          <RouteCard route={route} rank={rank} onClick={() => {}} />
+          <RouteCard route={route} rank={rank} onClick={onShowMap} />
 
           {/* 이동 단계 */}
           {steps.length > 0 && (
@@ -282,7 +308,7 @@ export default function RouteDetailSheet({
           {/* 액션 버튼 */}
           <div className="space-y-2 pb-4">
             <button
-              onClick={onShowMap}
+              onClick={() => onShowMap(route)}
               className="w-full py-4 rounded-xl bg-blue-500 text-white text-sm font-semibold flex items-center justify-center gap-2 active:bg-blue-700 transition-colors"
             >
               <Map size={16} />

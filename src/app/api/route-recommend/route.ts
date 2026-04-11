@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
 
     const { hubId, destinationId, hasLuggage, lockerPreference, preferLessWalking } = parsed.data;
 
+    const start = Date.now();
     const result = await computeRouteRecommendation(
       hubId,
       destinationId,
@@ -22,9 +23,11 @@ export async function POST(req: NextRequest) {
       preferLessWalking,
       lockerPreference,
     );
+    console.log(`[route-recommend] 완료 ${Date.now() - start}ms | routes: ${result.routes.length}`);
 
     return NextResponse.json({ ok: true, data: result });
   } catch (err) {
+    console.error('[route-recommend] 오류:', err);
     const message = err instanceof Error ? err.message : '경로 추천 중 오류가 발생했습니다.';
     return NextResponse.json({ ok: false, message }, { status: 500 });
   }

@@ -124,7 +124,7 @@ export default function HomePage() {
                 {data.hubName} → {data.destinationName}
               </h1>
               <p className="mt-0.5 text-[13px] text-gray-400">
-                추천 경로 {data.routes.length}가지
+                추천 경로 {Math.min(data.routes.length, 3)}가지
               </p>
               {input && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
@@ -178,16 +178,15 @@ export default function HomePage() {
               />
             ))}
 
-          {/* 결과 카드 */}
+          {/* 결과 카드 (상위 3개만 노출) */}
           {data &&
             !isFetching &&
-            data.routes.map((route, idx) => (
+            data.routes.slice(0, 3).map((route, idx) => (
               <RouteCard
                 key={route.id}
                 route={route}
                 rank={idx + 1}
                 onClick={setSelectedRoute}
-                onShowMap={(r) => { setSelectedRoute(r); setView('map'); }}
               />
             ))}
         </div>
@@ -200,7 +199,7 @@ export default function HomePage() {
           result={data}
           rank={data.routes.findIndex((r) => r.id === selectedRoute.id) + 1}
           onClose={() => setSelectedRoute(null)}
-          onShowMap={() => setView('map')}
+          onShowMap={(r) => { setSelectedRoute(r); setView('map'); }}
         />
       )}
     </div>

@@ -54,16 +54,22 @@ export async function getLockerRealtime(
   );
 }
 
+export type TRawLocker = {
+  stlckId: string;
+  name: string;
+  lat: number;
+  lot: number;
+  large: number;
+  medium: number;
+  small: number;
+  total: number;
+};
+
 /**
- * 허브 좌표 기준으로 maxDistM 이내의 보관함을 찾아 실시간 가용 수와 함께 반환.
- * 보관함 API는 서울특별시(1100000000) 단위로만 데이터가 존재하므로
- * 전체를 불러온 뒤 좌표 기반으로 필터링함.
+ * 서울 전체 보관함 원본 데이터를 한 번만 가져와 반환.
+ * info + realtime을 병렬 조회한 후 stlckId 기준으로 조인.
  */
-export async function getNearbyLockerAvailability(
-  hubLat: number,
-  hubLot: number,
-  maxDistM = 3000
-): Promise<{ nearby: TNearbyLocker[]; totalAvailable: number }> {
+export async function getAllLockerData(): Promise<TRawLocker[]> {
   const [infoList, realtimeList] = await Promise.all([
     getLockerInfo(SEOUL_CODE),
     getLockerRealtime(SEOUL_CODE),
@@ -73,28 +79,23 @@ export async function getNearbyLockerAvailability(
     realtimeList.filter((r) => r.stlckId).map((r) => [r.stlckId!, r])
   );
 
-  const nearby: TNearbyLocker[] = [];
+  const result: TRawLocker[] = [];
   for (const info of infoList) {
     if (!info.stlckId || !info.lat || !info.lot) continue;
     const lat = parseFloat(info.lat);
     const lot = parseFloat(info.lot);
     if (isNaN(lat) || isNaN(lot)) continue;
 
-    const straightM = haversineDistanceM(hubLat, hubLot, lat, lot);
-    if (straightM > maxDistM) continue;
-
     const rt = realtimeMap.get(info.stlckId);
     const large = parseInt(rt?.usePsbltyLrgszStlckCnt ?? "0", 10);
     const medium = parseInt(rt?.usePsbltyMdmszStlckCnt ?? "0", 10);
     const small = parseInt(rt?.usePsbltySmlszStlckCnt ?? "0", 10);
 
-    nearby.push({
+    result.push({
       stlckId: info.stlckId,
       name: info.stlckRprsPstnNm ?? info.sggNm ?? "인근 보관함",
       lat,
       lot,
-      straightM: Math.round(straightM),
-      roadM: roadDistanceM(straightM),
       large,
       medium,
       small,
@@ -102,8 +103,53 @@ export async function getNearbyLockerAvailability(
     });
   }
 
+  return result;
+}
+
+/**
+ * 미리 가져온 원본 데이터에서 좌표 기준으로 근처 보관함을 필터링. (API 호출 없음)
+ */
+export function filterNearbyLockers(
+  allLockers: TRawLocker[],
+  targetLat: number,
+  targetLot: number,
+  maxDistM = 3000
+): { nearby: TNearbyLocker[]; totalAvailable: number } {
+  const nearby: TNearbyLocker[] = [];
+
+  for (const locker of allLockers) {
+    const straightM = haversineDistanceM(targetLat, targetLot, locker.lat, locker.lot);
+    if (straightM > maxDistM) continue;
+
+    nearby.push({
+      stlckId: locker.stlckId,
+      name: locker.name,
+      lat: locker.lat,
+      lot: locker.lot,
+      straightM: Math.round(straightM),
+      roadM: roadDistanceM(straightM),
+      large: locker.large,
+      medium: locker.medium,
+      small: locker.small,
+      total: locker.total,
+    });
+  }
+
   nearby.sort((a, b) => a.straightM - b.straightM);
   const totalAvailable = nearby.reduce((s, l) => s + l.total, 0);
 
   return { nearby, totalAvailable };
+}
+
+/**
+ * @deprecated getAllLockerData + filterNearbyLockers 조합으로 대체.
+ * 단독 호출 시에만 사용.
+ */
+export async function getNearbyLockerAvailability(
+  hubLat: number,
+  hubLot: number,
+  maxDistM = 3000
+): Promise<{ nearby: TNearbyLocker[]; totalAvailable: number }> {
+  const all = await getAllLockerData();
+  return filterNearbyLockers(all, hubLat, hubLot, maxDistM);
 }

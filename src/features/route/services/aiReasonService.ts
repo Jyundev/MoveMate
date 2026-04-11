@@ -87,9 +87,11 @@ function buildUserPrompt(ctx: AiReasonContext): string {
   return lines.join("\n");
 }
 
+const AI_TIMEOUT_MS = 3000;
+
 /**
  * OpenAI API로 경로 추천 이유를 자연어로 강화합니다.
- * API 키 미설정 또는 오류 시 null 반환 → 호출부에서 룰베이스 fallback 처리.
+ * API 키 미설정, 오류, 3초 초과 시 null 반환 → 호출부에서 룰베이스 fallback 처리.
  */
 export async function generateAiReason(
   ctx: AiReasonContext
@@ -97,7 +99,10 @@ export async function generateAiReason(
   if (!openai) return null;
 
   try {
-    const res = await openai.responses.create({
+    const timeout = new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), AI_TIMEOUT_MS)
+    );
+    const request = openai.responses.create({
       model: "gpt-4.1-mini",
       input: [
         { role: "system", content: SYSTEM_PROMPT },
@@ -106,6 +111,13 @@ export async function generateAiReason(
       max_output_tokens: 120,
       temperature: 0.4,
     });
+
+    const res = await Promise.race([request, timeout]);
+    if (!res) {
+      if (process.env.NODE_ENV === "development") console.warn("generateAiReason: timeout");
+      return null;
+    }
+
     const text = res.output_text?.trim() || null;
     if (process.env.NODE_ENV === "development") {
       console.log("generateAiReason:", text);
@@ -124,5 +136,6 @@ export async function generateAiReason(
 export async function generateAiReasons(
   contexts: AiReasonContext[]
 ): Promise<(string | null)[]> {
-  return Promise.all(contexts.map((ctx) => generateAiReason(ctx)));
+  const results = await Promise.allSettled(contexts.map((ctx) => generateAiReason(ctx)));
+  return results.map((r) => (r.status === "fulfilled" ? r.value : null));
 }

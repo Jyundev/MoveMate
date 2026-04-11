@@ -7,7 +7,6 @@ type Props = {
   route: TRouteOption;
   rank: number;
   onClick: (route: TRouteOption) => void;
-  onShowMap?: (route: TRouteOption) => void;
 };
 
 const MODE_ICON: Record<TTransportMode, React.ReactNode> = {
@@ -57,7 +56,7 @@ function getFailRiskReason(route: TRouteOption): string | null {
   return null;
 }
 
-export default function RouteCard({ route, rank, onClick, onShowMap }: Props) {
+export default function RouteCard({ route, rank, onClick }: Props) {
   const isTop = rank === 1;
   const stability = STABILITY_LABEL[route.stability];
   const risk = FAIL_RISK_LABEL[route.failRisk];
@@ -181,9 +180,9 @@ export default function RouteCard({ route, rank, onClick, onShowMap }: Props) {
       </div>
 
       {/* CTA — 1순위 카드에만 표시 */}
-      {isTop && onShowMap && (
+      {isTop && (
         <button
-          onClick={(e) => { e.stopPropagation(); onShowMap(route); }}
+          onClick={(e) => { e.stopPropagation(); onClick(route); }}
           className="w-full py-3 rounded-xl bg-blue-500 text-white text-[13px] font-semibold flex items-center justify-center gap-1.5 active:bg-blue-700 transition-colors"
         >
           이 전략으로 이동하기
