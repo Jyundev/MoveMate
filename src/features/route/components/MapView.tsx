@@ -70,7 +70,7 @@ export default function MapView({
 
       // 허브 마커
       const hubMarker = L.divIcon({
-        html: `<div style="background:#3b82f6;color:white;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 10px rgba(59,130,246,0.5);border:3px solid white;">🚉</div>`,
+        html: `<div style="background:#3b82f6;color:white;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(59,130,246,0.5);border:3px solid white;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>`,
         className: "",
         iconSize: [40, 40],
         iconAnchor: [20, 20],
@@ -82,7 +82,7 @@ export default function MapView({
       // 목적지 마커
       const destColor = MODE_COLOR[route.mode];
       const destMarker = L.divIcon({
-        html: `<div style="background:${destColor};color:white;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 10px rgba(0,0,0,0.3);border:3px solid white;">📍</div>`,
+        html: `<div style="background:${destColor};color:white;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.3);border:3px solid white;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3" fill="white"/></svg></div>`,
         className: "",
         iconSize: [40, 40],
         iconAnchor: [20, 20],
@@ -273,10 +273,9 @@ export default function MapView({
 
             {/* 범례 */}
             <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-              <Legend color="#3b82f6" emoji="🚉" label={hubName} />
+              <Legend color="#3b82f6" label={hubName} />
               <Legend
                 color={MODE_COLOR[route.mode]}
-                emoji="📍"
                 label={destinationName}
               />
               {route.mode !== "WALK" && (
@@ -292,24 +291,14 @@ export default function MapView({
   );
 }
 
-function Legend({
-  color,
-  emoji,
-  label,
-}: {
-  color: string;
-  emoji: string;
-  label: string;
-}) {
+function Legend({ color, label }: { color: string; label: string }) {
   return (
     <div className="flex items-center gap-1.5">
       <span
         className="w-3 h-3 rounded-full shrink-0"
         style={{ backgroundColor: color }}
       />
-      <span className="text-[11px] text-gray-600">
-        {emoji} {label}
-      </span>
+      <span className="text-[11px] text-gray-600">{label}</span>
     </div>
   );
 }

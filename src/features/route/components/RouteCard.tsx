@@ -1,7 +1,7 @@
 "use client";
 
 import type { TAvailability, TFailRisk, TRouteOption, TTransportMode } from "@/types";
-import { ArrowRight, Bike, Footprints, Package } from "lucide-react";
+import { Activity, ArrowRight, Bike, Clock, Footprints, Package, Sparkles } from "lucide-react";
 
 type Props = {
   route: TRouteOption;
@@ -76,7 +76,8 @@ export default function RouteCard({ route, rank, onClick }: Props) {
         <div className="flex items-center gap-2">
           {isTop ? (
             <span className="flex items-center gap-1.5 text-[12px] font-extrabold text-blue-600 bg-blue-100 px-3 py-1 rounded-full border border-blue-200">
-              ⭐ 지금 조건에서 최적 선택
+              <Sparkles size={11} />
+              지금 조건에서 최적 선택
             </span>
           ) : (
             <span className="text-[11px] text-gray-400 font-medium px-1">
@@ -112,7 +113,7 @@ export default function RouteCard({ route, rank, onClick }: Props) {
 
       {/* 출발/도착 시각 */}
       <div className={`flex items-center gap-2 text-[12px] rounded-xl px-3 py-2 ${isTop ? 'bg-blue-100/50' : 'bg-gray-50'}`}>
-        <span className={isTop ? 'text-blue-500' : 'text-gray-400'}>🕐</span>
+        <Clock size={13} className={isTop ? 'text-blue-500' : 'text-gray-400'} />
         <span className={`font-semibold tabular-nums ${isTop ? 'text-blue-700' : 'text-gray-700'}`}>
           출발 {route.estimatedDepartureTime}
         </span>
@@ -125,8 +126,9 @@ export default function RouteCard({ route, rank, onClick }: Props) {
       {/* 실시간 공공데이터 → 분석 결과 */}
       {(route.bike || route.locker) ? (
         <div className={`rounded-xl px-3 py-2.5 space-y-1.5 ${isTop ? 'bg-blue-50/70' : 'bg-gray-50'}`}>
-          <p className={`text-[10px] font-bold uppercase tracking-wide ${isTop ? 'text-blue-400' : 'text-gray-400'}`}>
-            📊 실시간 공공데이터
+          <p className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide ${isTop ? 'text-blue-400' : 'text-gray-400'}`}>
+            <Activity size={10} />
+            실시간 공공데이터
           </p>
           {route.bike && (
             <div className="flex items-center gap-2 text-[12px] text-gray-600">
@@ -162,7 +164,7 @@ export default function RouteCard({ route, rank, onClick }: Props) {
         /* 데이터 없는 경우 (도보): 추천 이유만 표시 */
         <div className={`rounded-xl px-4 py-3 ${isTop ? 'bg-blue-100/60' : 'bg-gray-50'}`}>
           <p className={`text-[12px] leading-[1.6] ${isTop ? 'text-blue-700' : 'text-gray-600'}`}>
-            ⭐ {route.reason}
+            {route.reason}
           </p>
         </div>
       )}

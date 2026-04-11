@@ -7,7 +7,7 @@ import RouteDetailSheet from '@/features/route/components/RouteDetailSheet';
 import RouteInputForm from '@/features/route/components/RouteInputForm';
 import { useRouteRecommend } from '@/features/route/hooks/useRouteRecommend';
 import type { TRouteInput, TRouteOption } from '@/types';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Briefcase, Clock, Footprints } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -129,18 +129,18 @@ export default function HomePage() {
               {input && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {input.hasLuggage && (
-                    <span className="text-[11px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-100 font-medium">
-                      🧳 짐 있음
+                    <span className="flex items-center gap-1 text-[11px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-100 font-medium">
+                      <Briefcase size={11} /> 짐 있음
                     </span>
                   )}
                   {input.preferLessWalking && (
-                    <span className="text-[11px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-100 font-medium">
-                      🚶 도보 최소화
+                    <span className="flex items-center gap-1 text-[11px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-100 font-medium">
+                      <Footprints size={11} /> 도보 최소화
                     </span>
                   )}
                   {data.targetArrivalTime && (
-                    <span className="text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-100 font-medium">
-                      ⏰ {data.targetArrivalTime} 도착 목표
+                    <span className="flex items-center gap-1 text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-100 font-medium">
+                      <Clock size={11} /> {data.targetArrivalTime} 도착 목표
                     </span>
                   )}
                 </div>

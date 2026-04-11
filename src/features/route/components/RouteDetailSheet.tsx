@@ -280,7 +280,7 @@ export default function RouteDetailSheet({
             </h3>
             <div className="bg-blue-50 rounded-2xl px-4 py-4">
               <p className="text-[13px] text-blue-800 leading-relaxed">
-                ⭐ {route.reason}
+                {route.reason}
               </p>
               <div className="mt-3 pt-3 border-t border-blue-100 grid grid-cols-3 gap-2 text-center">
                 <StatItem label="예상 출발" value={route.estimatedDepartureTime} />
