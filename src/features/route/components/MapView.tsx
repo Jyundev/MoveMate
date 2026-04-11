@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 
 import { findHub, findSubDestination } from "@/config/demoPlaces";
 import type { TRouteInput, TRouteOption } from "@/types";
+import { Geolocation } from "@capacitor/geolocation";
 import { ArrowLeft, Bike, Footprints, Locate, Package } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -118,35 +119,31 @@ export default function MapView({
 
       mapRef.current = map;
 
-      // 사용자 현재 위치 요청
-      if ("geolocation" in navigator) {
-        setLocationStatus("loading");
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const { latitude: lat, longitude: lng } = pos.coords;
-            userLatLngRef.current = [lat, lng];
-            setLocationStatus("granted");
+      // 사용자 현재 위치 요청 (Capacitor 네이티브 플러그인 사용)
+      setLocationStatus("loading");
+      Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 })
+        .then((pos) => {
+          const { latitude: lat, longitude: longitude } = pos.coords;
+          userLatLngRef.current = [lat, longitude];
+          setLocationStatus("granted");
 
-            // 현재 위치 마커 (파란 점 + 펄스 링)
-            const userIcon = L.divIcon({
-              html: `
-                <div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
-                  <div class="mm-pulse" style="position:absolute;background:rgba(59,130,246,0.25);border-radius:50%;width:40px;height:40px;"></div>
-                  <div style="background:#3b82f6;border-radius:50%;width:14px;height:14px;border:2.5px solid white;box-shadow:0 1px 6px rgba(59,130,246,0.6);position:relative;z-index:1;"></div>
-                </div>`,
-              className: "",
-              iconSize: [40, 40],
-              iconAnchor: [20, 20],
-            });
+          // 현재 위치 마커 (파란 점 + 펄스 링)
+          const userIcon = L.divIcon({
+            html: `
+              <div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+                <div class="mm-pulse" style="position:absolute;background:rgba(59,130,246,0.25);border-radius:50%;width:40px;height:40px;"></div>
+                <div style="background:#3b82f6;border-radius:50%;width:14px;height:14px;border:2.5px solid white;box-shadow:0 1px 6px rgba(59,130,246,0.6);position:relative;z-index:1;"></div>
+              </div>`,
+            className: "",
+            iconSize: [40, 40],
+            iconAnchor: [20, 20],
+          });
 
-            L.marker([lat, lng], { icon: userIcon, zIndexOffset: 1000 })
-              .addTo(map)
-              .bindPopup("현재 위치", { closeButton: false });
-          },
-          () => setLocationStatus("denied"),
-          { enableHighAccuracy: true, timeout: 10000 }
-        );
-      }
+          L.marker([lat, longitude], { icon: userIcon, zIndexOffset: 1000 })
+            .addTo(map)
+            .bindPopup("현재 위치", { closeButton: false });
+        })
+        .catch(() => setLocationStatus("denied"));
     });
 
     return () => {
