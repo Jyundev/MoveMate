@@ -145,6 +145,8 @@ export async function computeRouteRecommendation(
             ? 2
             : 1
           : -2) +
+        // 거리가 길수록 자전거 이점 커짐
+        (walkDistM >= 1200 ? 2 : walkDistM >= 900 ? 1 : 0) +
         (preferLessWalking ? 2 : 0) +
         (hasLuggage ? -3 : 2),
     },
@@ -155,6 +157,8 @@ export async function computeRouteRecommendation(
       score:
         (hasLuggage ? 4 : -1) +
         (totalLockersHub >= 5 ? 3 : totalLockersHub >= 1 ? 2 : -5) +
+        // 거리가 멀수록 짐 보관 이점 커짐, 너무 멀면 보관 후 도보도 부담
+        (walkDistM >= 1000 && walkDistM < 1500 ? 2 : walkDistM >= 1500 ? -1 : 0) +
         (preferLessWalking ? 1 : 0),
     },
     // 목적지 근처 보관 — 목적지 도착 후 짐 맡기고 탐방
@@ -164,15 +168,20 @@ export async function computeRouteRecommendation(
       score:
         (hasLuggage ? 3 : -2) +
         (totalLockersDest >= 5 ? 3 : totalLockersDest >= 1 ? 2 : -5) +
+        (walkDistM >= 1000 && walkDistM < 1500 ? 1 : 0) +
         (preferLessWalking ? -1 : 0),
     },
   ];
   candidates.sort((a, b) => b.score - a.score);
 
-  // lockerPreference에 따라 LOCKER_WALK 후보 필터링
+  // 후보 필터링
   const filteredCandidates = candidates.filter((c) => {
+    // 자전거: 대여소 없거나 잔여 0대면 제외
+    if (c.mode === "BIKE" && (!nearestBike || nearestBike.count === 0)) return false;
+    // 보관 전략: 짐 없으면 전체 제외
     if (c.mode !== "LOCKER_WALK") return true;
-    if (!hasLuggage || !lockerPreference || lockerPreference === "recommend") return true;
+    if (!hasLuggage) return false;
+    if (!lockerPreference || lockerPreference === "recommend") return true;
     return c.lockerLocation === lockerPreference;
   });
 
@@ -245,7 +254,12 @@ export async function computeRouteRecommendation(
         const toStationMin = nearestBike
           ? walkMinutes(nearestBike.roadM)
           : walkMin;
-        const rideMin = nearestBike ? bikeMinutes(walkDistM) : walkMin;
+        // 자전거 구간 = 대여소~목적지 거리 (허브→목적지 - 허브→대여소 직선거리)
+        // 대여소가 목적지 방향에 있다고 가정. 최소 200m 보정.
+        const rideDistM = nearestBike
+          ? Math.max(200, walkDistM - nearestBike.straightM)
+          : walkDistM;
+        const rideMin = bikeMinutes(rideDistM);
         const totalMin = nearestBike ? toStationMin + rideMin : walkMin;
         const times = resolveTimes(totalMin);
         const timeBufferMinutes = hasTargetTime
@@ -272,7 +286,7 @@ export async function computeRouteRecommendation(
             timeBufferMinutes,
           }),
           score: c.score,
-          reason: buildReason("BIKE", { bikeCount, nearestBike }),
+          reason: buildReason("BIKE", { bikeCount, nearestBike, walkDistM }),
           ...(nearestBike && {
             bike: {
               stationName: nearestBike.name,
@@ -294,7 +308,9 @@ export async function computeRouteRecommendation(
         const lockerAreaName = isHub ? hub.name : dest.name;
 
         const LOCKER_USE_MIN = 5;
-        const totalMin = walkMin + LOCKER_USE_MIN;
+        const lockerRoadM = nearestLocker?.roadM ?? 300; // 보관함까지 도로 거리 (없으면 300m 기본값)
+        const toLockerMin = walkMinutes(lockerRoadM);    // 보관함까지 도보 시간
+        const totalMin = walkMin + toLockerMin + LOCKER_USE_MIN;
         const times = resolveTimes(totalMin);
         const timeBufferMinutes = hasTargetTime
           ? diffMinutes(requestNowHHmm, targetArrivalTime) - totalMin
@@ -305,7 +321,7 @@ export async function computeRouteRecommendation(
           mode: "LOCKER_WALK",
           lockerLocation: c.lockerLocation,
           totalMinutes: totalMin,
-          walkMinutes: walkMin,
+          walkMinutes: walkMin + toLockerMin, // 목적지 도보 + 보관함 이동 합산
           ...times,
           stability: lockerAvailability,
           failRisk: computeFailRisk({
@@ -438,7 +454,7 @@ function buildReason(
     preferLessWalking?: boolean;
     walkDistM?: number;
     bikeCount?: number;
-    nearestBike?: { name: string; count: number; roadM: number } | null;
+    nearestBike?: { name: string; count: number; roadM: number; straightM: number } | null;
     totalLockers?: number;
     lockerLocation?: "hub" | "destination";
     hubName?: string;
@@ -455,10 +471,18 @@ function buildReason(
       return `목적지까지 도보 약 ${walkMinutes(walkDistM)}분 거리입니다.`;
     }
     case "BIKE": {
-      const { bikeCount = 0, nearestBike } = ctx;
+      const { bikeCount = 0, nearestBike, walkDistM = 0 } = ctx;
       if (!nearestBike || bikeCount === 0)
         return "자전거 대여소가 인근에 있으나 현재 잔여 자전거를 확인하세요.";
-      return `약 ${nearestBike.roadM}m 거리 대여소에 자전거 ${bikeCount}대 이용 가능합니다. 도보보다 빠르게 이동할 수 있습니다.`;
+      const toStationMin = walkMinutes(nearestBike.roadM);
+      const rideDistM = Math.max(200, walkDistM - nearestBike.straightM);
+      const bikeTotal = toStationMin + bikeMinutes(rideDistM);
+      const walkTotal = walkMinutes(walkDistM);
+      const saved = walkTotal - bikeTotal;
+      const timePart = saved > 0
+        ? `도보 대비 약 ${saved}분 빠릅니다.`
+        : "도보와 소요 시간이 비슷합니다.";
+      return `약 ${nearestBike.roadM}m 거리 대여소에 자전거 ${bikeCount}대 이용 가능합니다. ${timePart}`;
     }
     case "LOCKER_WALK": {
       const { totalLockers = 0, hasLuggage, lockerLocation, hubName, destName } = ctx;
