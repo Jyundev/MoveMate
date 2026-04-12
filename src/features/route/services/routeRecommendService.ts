@@ -99,7 +99,7 @@ export async function computeRouteRecommendation(
     if (minDist <= 1000) {
       nearestBike = {
         name: best.rntstnNm ?? "인근 대여소",
-        count: parseInt(best.bcyclTpkctNocs || "0", 10),
+        count: parseInt((best.bcyclTpkctNocs ?? "0").trim() || "0", 10),
         straightM: Math.round(minDist),
         roadM: roadDistanceM(minDist), // 직선거리 × 1.3 보정
       };
@@ -204,7 +204,7 @@ export async function computeRouteRecommendation(
     // 자전거: 대여소 없거나 잔여 0대면 제외
     if ((c.mode === "BIKE" || c.mode === "LOCKER_BIKE") &&
         (!nearestBike || nearestBike.count === 0)) return false;
-    // 자전거: 짐 있으면 제외 (캐리어 들고 따릉이 불가)
+    // 자전거: 짐 있으면 제외 (캐리어 들고 공영자전거 불가)
     if (c.mode === "BIKE" && hasLuggage) return false;
     // 보관 전략: 짐 없으면 전체 제외
     if (c.mode === "LOCKER_WALK" || c.mode === "LOCKER_BIKE") {
@@ -240,7 +240,7 @@ export async function computeRouteRecommendation(
     };
   }
 
-  const routes: TRouteOption[] = filteredCandidates.map((c, idx) => {
+  const routes: TRouteOption[] = filteredCandidates.slice(0, 3).map((c, idx) => {
     const id = ["A", "B", "C", "D"][idx];
 
     switch (c.mode) {

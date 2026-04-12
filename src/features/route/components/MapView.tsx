@@ -319,9 +319,12 @@ export default function MapView({
           </div>
         )}
 
-        {/* 하단 카드 — 낮고 컴팩트하게 */}
-        <div className="absolute bottom-0 left-0 right-0 pointer-events-auto">
-          <div className={`mx-4 mb-5 ${cardCls} px-4 py-3`}>
+        {/* 하단 카드 — iOS 홈바 safe area 반영 */}
+        <div
+          className="absolute bottom-0 left-0 right-0 pointer-events-auto"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        >
+          <div className={`mx-4 mb-4 ${cardCls} px-4 py-3`}>
             <div className="flex items-center gap-3">
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"

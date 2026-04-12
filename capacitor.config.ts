@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: "out",
   // server.url 설정 시 로컬 번들 대신 배포된 URL을 WebView로 로드
   server: {
-    url: "https://move-mate-nine.vercel.app",
+    url: "https://movemate-route.vercel.app",
     cleartext: false,
   },
   ios: {

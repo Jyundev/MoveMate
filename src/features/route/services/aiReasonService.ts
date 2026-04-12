@@ -40,7 +40,7 @@ export type AiReasonContext = {
 function buildUserPrompt(ctx: AiReasonContext): string {
   const modeLabel =
     ctx.mode === "WALK" ? "도보"
-    : ctx.mode === "BIKE" ? "따릉이 자전거"
+    : ctx.mode === "BIKE" ? "공영자전거"
     : ctx.mode === "LOCKER_BIKE" ? "거점 짐 보관 후 자전거 이동"
     : ctx.lockerLocation === "hub" ? "도착 직후 짐 보관 후 도보 이동"
     : "목적지 근처 짐 보관 후 이동";
