@@ -56,7 +56,7 @@ export default function OnboardingScreen({ onStart }: Props) {
             onClick={onStart}
             className="w-full py-4 bg-blue-500 text-white text-[16px] font-semibold rounded-2xl active:bg-blue-600 active:scale-[0.98] transition-all shadow-sm"
           >
-            이동 경로 추천받기
+            이동 전략 추천받기
           </button>
           <p className="text-center text-[12px] text-gray-400 mt-3">
             현재 서울역 · 강남역 · 성수역 중심으로 지원해요
