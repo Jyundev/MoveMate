@@ -26,6 +26,26 @@ type Step = {
   sub?: string;
 };
 
+function getDetailFailRiskReason(route: TRouteOption): string | null {
+  if (route.failRisk === 'LOW' || route.mode === 'WALK') return null;
+  if (route.mode === 'BIKE') {
+    return route.failRisk === 'HIGH'
+      ? '자전거 수가 부족해 현장에서 대여 불가 가능성이 있습니다'
+      : '자전거 수가 적어 도착 전 대여 완료될 수 있습니다';
+  }
+  if (route.mode === 'LOCKER_WALK') {
+    return route.failRisk === 'HIGH'
+      ? '보관함 여석이 부족해 이용 불가 가능성이 있습니다'
+      : '보관함 여석이 적어 도착 전 마감될 수 있습니다';
+  }
+  if (route.mode === 'LOCKER_BIKE') {
+    return route.failRisk === 'HIGH'
+      ? '자전거 또는 보관함 중 하나라도 이용 불가일 경우 전략 전체가 실패할 수 있습니다'
+      : '자전거·보관함 모두 여유가 필요하므로 둘 중 하나가 부족하면 대안이 필요합니다';
+  }
+  return null;
+}
+
 function buildSteps(route: TRouteOption, result: TRecommendResult): Step[] {
   const hub = result.hubName;
   const dest = result.destinationName;
@@ -35,12 +55,12 @@ function buildSteps(route: TRouteOption, result: TRecommendResult): Step[] {
       {
         icon: <Footprints size={16} className="text-blue-500" />,
         label: `${hub}에서 출발`,
-        sub: '거점 도착 후 바로 이동',
+        sub: '별도 이동수단 없이 바로 이동 · 가장 단순한 방법',
       },
       {
         icon: <ArrowRight size={16} className="text-gray-400" />,
         label: `${dest}까지 도보 이동`,
-        sub: `약 ${route.walkMinutes}분 소요`,
+        sub: `약 ${route.walkMinutes}분 소요 · 짐 없이 이동 가능한 거리`,
       },
       {
         icon: <CheckCircle size={16} className="text-green-500" />,
@@ -56,17 +76,17 @@ function buildSteps(route: TRouteOption, result: TRecommendResult): Step[] {
       {
         icon: <Footprints size={16} className="text-blue-500" />,
         label: `${hub}에서 출발`,
-        sub: '거점 도착 후 자전거 대여소로 이동',
+        sub: '대여소까지 짧게 이동 · 이동 시간 단축 목적',
       },
       {
         icon: <Bike size={16} className="text-blue-500" />,
         label: `${route.bike.stationName} 자전거 대여`,
-        sub: `거점에서 ${route.bike.distanceM}m · 잔여 ${route.bike.availableCount}대`,
+        sub: `거점에서 ${route.bike.distanceM}m · 잔여 ${route.bike.availableCount}대 확인됨`,
       },
       {
         icon: <ArrowRight size={16} className="text-gray-400" />,
         label: `자전거로 ${dest}까지 이동`,
-        sub: `약 ${rideMin > 0 ? rideMin : route.totalMinutes}분 소요`,
+        sub: `약 ${rideMin > 0 ? rideMin : route.totalMinutes}분 소요 · 도보 대비 빠른 이동`,
       },
       {
         icon: <CheckCircle size={16} className="text-green-500" />,
@@ -82,17 +102,17 @@ function buildSteps(route: TRouteOption, result: TRecommendResult): Step[] {
         {
           icon: <Footprints size={16} className="text-blue-500" />,
           label: `${hub}에서 출발`,
-          sub: '짐을 들고 목적지로 이동',
+          sub: '짐을 들고 목적지로 이동 · 보관 전 이동 부담 감수',
         },
         {
           icon: <Package size={16} className="text-purple-500" />,
           label: `${dest} 도착 후 짐 보관`,
-          sub: `${route.locker.name} · 여유 ${route.locker.availableCount}칸`,
+          sub: `${route.locker.name} · 여유 ${route.locker.availableCount}칸 · 도착 후 바로 보관`,
         },
         {
           icon: <CheckCircle size={16} className="text-green-500" />,
           label: `${dest} 자유 탐방`,
-          sub: `목표 도착 ${route.targetArrivalTime}`,
+          sub: `목표 도착 ${route.targetArrivalTime} · 짐 없이 활동 가능`,
         },
       ];
     }
@@ -101,12 +121,12 @@ function buildSteps(route: TRouteOption, result: TRecommendResult): Step[] {
       {
         icon: <Package size={16} className="text-blue-500" />,
         label: `${hub}에서 짐 보관`,
-        sub: `${route.locker.name} · 여유 ${route.locker.availableCount}칸`,
+        sub: `${route.locker.name} · 여유 ${route.locker.availableCount}칸 · 이동 전 짐 해소`,
       },
       {
         icon: <Footprints size={16} className="text-gray-400" />,
         label: `가볍게 ${dest}까지 도보`,
-        sub: `약 ${route.walkMinutes}분 소요`,
+        sub: `약 ${route.walkMinutes}분 소요 · 짐 없이 편하게 이동`,
       },
       {
         icon: <CheckCircle size={16} className="text-green-500" />,
@@ -122,17 +142,17 @@ function buildSteps(route: TRouteOption, result: TRecommendResult): Step[] {
       {
         icon: <Package size={16} className="text-orange-500" />,
         label: `${hub}에서 짐 보관`,
-        sub: `${route.locker.name} · 여유 ${route.locker.availableCount}칸`,
+        sub: `${route.locker.name} · 여유 ${route.locker.availableCount}칸 · 자전거 이동 전 필수 처리`,
       },
       {
         icon: <Bike size={16} className="text-orange-500" />,
         label: `${route.bike.stationName} 자전거 대여`,
-        sub: `거점에서 ${route.bike.distanceM}m · 잔여 ${route.bike.availableCount}대`,
+        sub: `거점에서 ${route.bike.distanceM}m · 잔여 ${route.bike.availableCount}대 확인됨`,
       },
       {
         icon: <ArrowRight size={16} className="text-gray-400" />,
         label: `자전거로 ${dest}까지 이동`,
-        sub: `약 ${rideMin > 0 ? rideMin : route.totalMinutes}분 소요`,
+        sub: `약 ${rideMin > 0 ? rideMin : route.totalMinutes}분 소요 · 짐 없이 빠르게 이동`,
       },
       {
         icon: <CheckCircle size={16} className="text-green-500" />,
@@ -181,7 +201,7 @@ export default function RouteDetailSheet({
 
         <div className="px-5 py-4 space-y-5">
           {/* 루트 카드 요약 */}
-          <RouteCard route={route} rank={rank} onClick={onShowMap} />
+          <RouteCard route={route} rank={rank} onClick={onShowMap} hideCta hideReason />
 
           {/* 이동 단계 */}
           {steps.length > 0 && (
@@ -273,10 +293,10 @@ export default function RouteDetailSheet({
             </section>
           )}
 
-          {/* 왜 추천하나요 */}
+          {/* 선택 근거 */}
           <section>
             <h3 className="text-[13px] font-semibold text-gray-500 uppercase tracking-wide mb-3">
-              왜 추천하나요?
+              선택 근거
             </h3>
             <div className="bg-blue-50 rounded-2xl px-4 py-4">
               <p className="text-[13px] text-blue-800 leading-relaxed">
@@ -290,15 +310,22 @@ export default function RouteDetailSheet({
               <div className="mt-3 pt-3 border-t border-blue-100 grid grid-cols-2 gap-2">
                 <RiskItem
                   label="실행 가능성"
-                  value={{ HIGH: '높음', MEDIUM: '보통', LOW: '낮음' }[route.stability]}
+                  value={{ HIGH: '지금 바로 가능', MEDIUM: '여유 적음', LOW: '어려울 수 있음' }[route.stability]}
                   color={{ HIGH: 'text-green-600', MEDIUM: 'text-yellow-600', LOW: 'text-red-500' }[route.stability]}
+                  desc={getStabilityDesc(route)}
                 />
                 <RiskItem
                   label="실패 위험도"
-                  value={{ LOW: '낮음', MEDIUM: '보통', HIGH: '높음' }[route.failRisk]}
+                  value={{ LOW: '문제 없음', MEDIUM: '변수 있음', HIGH: '주의 필요' }[route.failRisk]}
                   color={{ LOW: 'text-green-600', MEDIUM: 'text-yellow-600', HIGH: 'text-red-500' }[route.failRisk]}
+                  desc={getFailRiskDesc(route)}
                 />
               </div>
+              {getDetailFailRiskReason(route) && (
+                <p className="text-[11px] text-blue-500/80 mt-2 leading-[1.5]">
+                  ⚠ {getDetailFailRiskReason(route)}
+                </p>
+              )}
               <p className="text-[10px] text-blue-400 mt-2">
                 * 실시간 데이터 + 추정 이동시간 기반 (도보 67m/분, 자전거 200m/분, 보정계수 1.3 적용)
               </p>
@@ -312,7 +339,7 @@ export default function RouteDetailSheet({
               className="w-full py-4 rounded-xl bg-blue-500 text-white text-sm font-semibold flex items-center justify-center gap-2 active:bg-blue-700 transition-colors"
             >
               <Map size={16} />
-              지도에서 위치 확인
+              지도에서 경로 보기
             </button>
             <button
               onClick={onClose}
@@ -381,11 +408,33 @@ function StatItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function RiskItem({ label, value, color }: { label: string; value: string; color: string }) {
+function RiskItem({ label, value, color, desc }: { label: string; value: string; color: string; desc?: string }) {
   return (
     <div className="text-center">
       <p className="text-[11px] text-blue-500">{label}</p>
       <p className={`text-[14px] font-bold mt-0.5 ${color}`}>{value}</p>
+      {desc && <p className="text-[10px] text-blue-400 mt-0.5 leading-snug">{desc}</p>}
     </div>
   );
+}
+
+function getStabilityDesc(route: TRouteOption): string {
+  if (route.mode === 'WALK') return '인프라 없이 바로 이동';
+  if (route.mode === 'BIKE') {
+    const count = route.bike?.availableCount ?? 0;
+    return `현재 자전거 ${count}대 확인`;
+  }
+  if (route.mode === 'LOCKER_WALK' || route.mode === 'LOCKER_BIKE') {
+    const count = route.locker?.availableCount ?? 0;
+    return `보관함 여유 ${count}칸 확인`;
+  }
+  return '';
+}
+
+function getFailRiskDesc(route: TRouteOption): string {
+  if (route.mode === 'WALK') return '외부 변수 없음';
+  if (route.mode === 'BIKE') return '대여소 혼잡도 기준';
+  if (route.mode === 'LOCKER_WALK') return '보관함 여석 기준';
+  if (route.mode === 'LOCKER_BIKE') return '자전거 + 보관함 복합 기준';
+  return '';
 }
