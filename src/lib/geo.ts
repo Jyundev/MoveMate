@@ -46,11 +46,11 @@ export function offsetTime(base: string, offsetMin: number): string {
   ).padStart(2, "0")}`;
 }
 
-/** 현재 시각을 HH:mm 문자열로 반환 */
+/** 현재 시각을 HH:mm 문자열로 반환 (KST, UTC+9) */
 export function nowHHmm(): string {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, "0")}:${String(
-    now.getMinutes()
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return `${String(kst.getUTCHours()).padStart(2, "0")}:${String(
+    kst.getUTCMinutes()
   ).padStart(2, "0")}`;
 }
 
