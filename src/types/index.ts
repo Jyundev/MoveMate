@@ -20,12 +20,14 @@ export type TBikeInfo = {
   stationName: string;
   availableCount: number;
   distanceM: number;
+  availability: TAvailability;
 };
 
 export type TLockerInfo = {
   name: string;
   availableCount: number;
   distanceM: number;
+  availability: TAvailability;
 };
 
 export type TRouteOption = {
@@ -46,8 +48,8 @@ export type TRouteOption = {
   lockerLocation?: 'hub' | 'destination';
   reason: string;
   score: number;
-  bike?: TBikeInfo & { availability: TAvailability };
-  locker?: TLockerInfo & { availability: TAvailability };
+  bike?: TBikeInfo;
+  locker?: TLockerInfo;
 };
 
 export type TDataStatus = {

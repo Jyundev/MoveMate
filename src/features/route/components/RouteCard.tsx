@@ -7,6 +7,8 @@ type Props = {
   route: TRouteOption;
   rank: number;
   onClick: (route: TRouteOption) => void;
+  hideCta?: boolean;
+  hideReason?: boolean;
 };
 
 const MODE_ICON: Record<TTransportMode, React.ReactNode> = {
@@ -16,16 +18,18 @@ const MODE_ICON: Record<TTransportMode, React.ReactNode> = {
   LOCKER_BIKE: <Package size={20} />,
 };
 
+// 실행 가능성: 지금 필요한 자원(자전거·보관함)이 충분한가
 const STABILITY_LABEL: Record<TAvailability, { label: string; className: string }> = {
-  HIGH:   { label: "실행 가능성 높음", className: "text-green-700" },
-  MEDIUM: { label: "실행 가능성 보통", className: "text-yellow-600" },
-  LOW:    { label: "실행 가능성 낮음", className: "text-red-500" },
+  HIGH:   { label: "지금 바로 가능",        className: "text-green-700" },
+  MEDIUM: { label: "이용 가능 (여유 적음)", className: "text-yellow-600" },
+  LOW:    { label: "이용 어려울 수 있음",   className: "text-red-500" },
 };
 
+// 실패 위험도: 이동 중 계획이 틀어질 가능성 (자원 부족 + 복잡도)
 const FAIL_RISK_LABEL: Record<TFailRisk, { label: string; className: string; dot: string }> = {
-  LOW:    { label: "실패 위험 낮음",  className: "bg-green-100 text-green-700",   dot: "bg-green-400" },
-  MEDIUM: { label: "실패 위험 보통",  className: "bg-yellow-100 text-yellow-700", dot: "bg-yellow-400" },
-  HIGH:   { label: "실패 위험 높음",  className: "bg-red-100 text-red-600",       dot: "bg-red-400" },
+  LOW:    { label: "이동 중 문제 없음",  className: "bg-green-100 text-green-700",   dot: "bg-green-400" },
+  MEDIUM: { label: "일부 변수 있음",     className: "bg-yellow-100 text-yellow-700", dot: "bg-yellow-400" },
+  HIGH:   { label: "주의 필요",          className: "bg-red-100 text-red-600",       dot: "bg-red-400" },
 };
 
 function getActionLabel(route: TRouteOption): string {
@@ -37,6 +41,31 @@ function getActionLabel(route: TRouteOption): string {
       : "짐 보관 후 가볍게 이동";
   }
   return "도보로 이동";
+}
+
+function getTopReason(route: TRouteOption): string {
+  const time = `${route.totalMinutes}분`;
+  const safe = route.failRisk === "LOW" ? "실패 위험 낮음" : null;
+
+  if (route.mode === "WALK") {
+    return safe
+      ? `도보 ${time} · 별도 인프라 없이 바로 이동 가능합니다`
+      : `도보 ${time} · 가장 단순하고 확실한 이동 방법입니다`;
+  }
+  if (route.mode === "BIKE") {
+    return safe
+      ? `자전거 ${time} · 가장 빠르고 ${safe}입니다`
+      : `자전거 ${time} · 현재 조건에서 가장 빠른 선택입니다`;
+  }
+  if (route.mode === "LOCKER_WALK") {
+    return safe
+      ? `짐 보관 후 ${time} · 실행 가능성이 가장 높습니다`
+      : `짐 보관 후 도보 이동 · 지금 조건에서 가장 현실적인 선택입니다`;
+  }
+  // LOCKER_BIKE
+  return safe
+    ? `짐 보관 후 자전거 ${time} · 빠르고 ${safe}입니다`
+    : `짐 보관 후 자전거 이동 · 현재 조건에서 가장 효율적입니다`;
 }
 
 function getFailRiskReason(route: TRouteOption): string | null {
@@ -56,7 +85,7 @@ function getFailRiskReason(route: TRouteOption): string | null {
   return null;
 }
 
-export default function RouteCard({ route, rank, onClick }: Props) {
+export default function RouteCard({ route, rank, onClick, hideCta = false, hideReason = false }: Props) {
   const isTop = rank === 1;
   const stability = STABILITY_LABEL[route.stability];
   const risk = FAIL_RISK_LABEL[route.failRisk];
@@ -91,6 +120,13 @@ export default function RouteCard({ route, rank, onClick }: Props) {
           {risk.label}
         </span>
       </div>
+
+      {/* 1순위 근거 한 줄 */}
+      {isTop && (
+        <p className="text-[12px] text-blue-600 font-medium -mt-1">
+          {getTopReason(route)}
+        </p>
+      )}
 
       {/* 이동 전략 이름 + 시간 */}
       <div className="flex items-center justify-between">
@@ -151,22 +187,26 @@ export default function RouteCard({ route, rank, onClick }: Props) {
             </div>
           )}
           {/* 데이터 → 분석 결과 연결 */}
-          <div className={`pt-2 mt-1 border-t ${isTop ? 'border-blue-100' : 'border-gray-200'}`}>
-            <p className={`text-[10px] font-bold uppercase tracking-wide mb-1 ${isTop ? 'text-blue-400' : 'text-gray-400'}`}>
-              → 분석 결과
-            </p>
+          {!hideReason && (
+            <div className={`pt-2 mt-1 border-t ${isTop ? 'border-blue-100' : 'border-gray-200'}`}>
+              <p className={`text-[10px] font-bold uppercase tracking-wide mb-1 ${isTop ? 'text-blue-400' : 'text-gray-400'}`}>
+                → 분석 결과
+              </p>
+              <p className={`text-[12px] leading-[1.6] ${isTop ? 'text-blue-700' : 'text-gray-600'}`}>
+                {route.reason}
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* 데이터 없는 경우 (도보): 추천 이유만 표시 */
+        !hideReason && (
+          <div className={`rounded-xl px-4 py-3 ${isTop ? 'bg-blue-100/60' : 'bg-gray-50'}`}>
             <p className={`text-[12px] leading-[1.6] ${isTop ? 'text-blue-700' : 'text-gray-600'}`}>
               {route.reason}
             </p>
           </div>
-        </div>
-      ) : (
-        /* 데이터 없는 경우 (도보): 추천 이유만 표시 */
-        <div className={`rounded-xl px-4 py-3 ${isTop ? 'bg-blue-100/60' : 'bg-gray-50'}`}>
-          <p className={`text-[12px] leading-[1.6] ${isTop ? 'text-blue-700' : 'text-gray-600'}`}>
-            {route.reason}
-          </p>
-        </div>
+        )
       )}
 
       {/* 실행 가능성 + 실패 위험도 이유 */}
@@ -181,8 +221,8 @@ export default function RouteCard({ route, rank, onClick }: Props) {
         )}
       </div>
 
-      {/* CTA — 1순위 카드에만 표시 */}
-      {isTop && (
+      {/* CTA — 1순위 카드에만 표시, 바텀시트 내부에서는 숨김 */}
+      {isTop && !hideCta && (
         <button
           onClick={(e) => { e.stopPropagation(); onClick(route); }}
           className="w-full py-3 rounded-xl bg-blue-500 text-white text-[13px] font-semibold flex items-center justify-center gap-1.5 active:bg-blue-700 transition-colors"

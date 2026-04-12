@@ -46,7 +46,7 @@ export async function computeRouteRecommendation(
 
   // 병렬 데이터 조회 — 보관함 원본은 한 번만 가져오고, 허브/목적지 필터링은 메모리에서 처리
   // 8초 타임아웃: fetch signal 대신 Promise.race로 처리 (next: { revalidate } 충돌 방지)
-  const API_TIMEOUT_MS = 8000;
+  const API_TIMEOUT_MS = 12000;
   function withTimeout<T>(p: Promise<T>): Promise<T> {
     return Promise.race([
       p,
@@ -60,6 +60,13 @@ export async function computeRouteRecommendation(
     withTimeout(getBikeAvailability()),
     withTimeout(getAllLockerData()),
   ]);
+
+  if (bikeResult.status === "rejected" && process.env.NODE_ENV === "development") {
+    console.warn("[MoveMate] 자전거 API 실패:", (bikeResult.reason as Error)?.message);
+  }
+  if (lockerRawResult.status === "rejected" && process.env.NODE_ENV === "development") {
+    console.warn("[MoveMate] 보관함 API 실패:", (lockerRawResult.reason as Error)?.message);
+  }
 
   const allLockers = lockerRawResult.status === "fulfilled" ? lockerRawResult.value : [];
   const lockerHubResult = filterNearbyLockers(allLockers, hub.lat, hub.lot);
@@ -78,12 +85,12 @@ export async function computeRouteRecommendation(
     let minDist = Infinity;
     let best = bikeData[0];
     for (const b of bikeData) {
-      const d = haversineDistanceM(
-        hub.lat,
-        hub.lot,
-        parseFloat(b.lat || "0"),
-        parseFloat(b.lot || "0")
-      );
+      if (!b.lat || !b.lot) continue;
+      const bLat = parseFloat(b.lat);
+      const bLot = parseFloat(b.lot);
+      // 서울 좌표 범위 검증 (위도 37.0~37.8, 경도 126.7~127.3)
+      if (bLat < 37.0 || bLat > 37.8 || bLot < 126.7 || bLot > 127.3) continue;
+      const d = haversineDistanceM(hub.lat, hub.lot, bLat, bLot);
       if (d < minDist) {
         minDist = d;
         best = b;
@@ -129,7 +136,9 @@ export async function computeRouteRecommendation(
           ? 3
           : walkDistM < 1500
           ? 2
-          : 1) +
+          : walkDistM < 2500
+          ? 1
+          : -2) +  // 2.5km 이상은 도보 권장 안 함
         (!hasLuggage ? 2 : 0) +
         (!preferLessWalking ? 2 : -1),
     },
@@ -169,11 +178,12 @@ export async function computeRouteRecommendation(
         (preferLessWalking ? -1 : 0),
     },
     // 거점 근처 보관 → 자전거 이동 (짐 있고 도보 최소화 원할 때 최적)
+    // hasLuggage=false이면 필터에서 제외되므로 항상 hasLuggage=true 상태
     {
       mode: "LOCKER_BIKE",
       lockerLocation: "hub",
       score:
-        (hasLuggage ? 5 : -10) +
+        5 +
         (bikeCount >= 5 ? 3 : bikeCount >= 1 ? 2 : -5) +
         (nearestBike
           ? nearestBike.roadM <= 400
@@ -243,7 +253,7 @@ export async function computeRouteRecommendation(
           totalMinutes: walkMin,
           walkMinutes: walkMin,
           ...times,
-          stability: walkDistM < 1500 ? "HIGH" : "MEDIUM",
+          stability: "HIGH", // 도보는 인프라 의존 없음 — 항상 바로 가능
           failRisk: computeFailRisk({
             mode: "WALK",
             bikeCount,
@@ -267,10 +277,9 @@ export async function computeRouteRecommendation(
         const toStationMin = nearestBike
           ? walkMinutes(nearestBike.roadM)
           : walkMin;
-        // 자전거 구간 = 대여소~목적지 거리 (허브→목적지 - 허브→대여소 직선거리)
-        // 대여소가 목적지 방향에 있다고 가정. 최소 200m 보정.
+        // 자전거 구간 = 대여소~목적지 직선거리 추정 후 road 보정 적용
         const rideDistM = nearestBike
-          ? Math.max(200, walkDistM - nearestBike.straightM)
+          ? roadDistanceM(Math.max(200, walkDistM - nearestBike.straightM))
           : walkDistM;
         const rideMin = bikeMinutes(rideDistM);
         const totalMin = nearestBike ? toStationMin + rideMin : walkMin;
@@ -312,8 +321,9 @@ export async function computeRouteRecommendation(
         const toLockerMin = walkMinutes(lockerRoadM);
         const LOCKER_USE_MIN = 5;
         const toStationMin = nearestBike ? walkMinutes(nearestBike.roadM) : 0;
+        // 자전거 구간도 road 보정 적용
         const rideDistM = nearestBike
-          ? Math.max(200, walkDistM - nearestBike.straightM)
+          ? roadDistanceM(Math.max(200, walkDistM - nearestBike.straightM))
           : walkDistM;
         const rideMin = bikeMinutes(rideDistM);
         // 보관함과 대여소가 같은 허브 근처 → max로 중복 도보 방지
@@ -395,7 +405,7 @@ export async function computeRouteRecommendation(
             bikeCount,
             lockerCount: totalLockers,
             totalMinutes: totalMin,
-            walkMin,
+            walkMin: walkMin + toLockerMin,  // 보관함 왕복 포함한 실제 도보 시간
             walkDistM,
             hasLuggage,
             preferLessWalking,
@@ -421,7 +431,7 @@ export async function computeRouteRecommendation(
 
   // ── AI 설명 강화 ──────────────────────────────────────────────
   // rule-based reason을 fallback으로 유지하면서 OpenAI로 자연어 설명 보강
-  const aiContexts: AiReasonContext[] = routes.map((r, idx) => ({
+  const aiContexts: AiReasonContext[] = routes.map((r) => ({
     mode: r.mode,
     lockerLocation: r.lockerLocation,
     totalMinutes: r.totalMinutes,
@@ -438,19 +448,29 @@ export async function computeRouteRecommendation(
     failRisk: r.failRisk,
     hubName: hub.name,
     destinationName: dest.name,
-    rank: idx + 1,
   }));
 
-  const aiReasons = await generateAiReasons(aiContexts);
+  let aiReasons: (string | null)[] = new Array(routes.length).fill(null);
+  try {
+    aiReasons = await generateAiReasons(aiContexts);
+  } catch (err) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[MoveMate] AI reason generation failed, using rule-based fallback:", err);
+    }
+  }
 
   const enhancedRoutes = routes.map((r, i) => ({
     ...r,
     reason: aiReasons[i] ?? r.reason,
   }));
 
+  if (enhancedRoutes.length === 0) {
+    throw new Error("조건에 맞는 이동 전략이 없습니다. 다시 시도해주세요.");
+  }
+
   return {
     routes: enhancedRoutes,
-    targetArrivalTime: routes[0].targetArrivalTime,
+    targetArrivalTime: enhancedRoutes[0].targetArrivalTime,
     hubName: hub.name,
     destinationName: dest.name,
     dataStatus: {
@@ -461,14 +481,12 @@ export async function computeRouteRecommendation(
 }
 
 /**
- * 실패 위험도 계산 (0~100점 → LOW / MEDIUM / HIGH)
+ * 실패 위험도 계산 (점수 합산 → LOW / MEDIUM / HIGH)
  *
- * 5가지 요소를 가중치 점수로 합산:
- *   1. 실시간 자원 부족 위험  (0~35점)
- *   2. 시간 촉박 위험        (0~25점)
- *   3. 거리/피로 위험        (0~20점)
- *   4. 사용자 조건 불일치    (0~15점)
- *   5. 전략 복잡도           (0~5점)
+ * 3가지 요소를 가중치 점수로 합산:
+ *   1. 실시간 자원 부족 위험  (0~35점) — 자전거 대수 / 보관함 여석
+ *   2. 거리/피로 위험         (0~20점) — 실제 도보 시간 기준
+ *   3. 전략 복잡도            (0~5점)  — 사용 인프라 수
  *
  *  0~29 → LOW · 30~59 → MEDIUM · 60~ → HIGH
  */
@@ -482,6 +500,9 @@ function computeFailRisk(params: {
   hasLuggage: boolean;
   preferLessWalking: boolean;
 }): TFailRisk {
+  // WALK는 인프라 의존성이 없으므로 실패 위험 없음
+  if (params.mode === "WALK") return "LOW";
+
   let score = 0;
 
   // ── 1. 실시간 자원 부족 위험 (0~35) ──────────────────────────
@@ -509,28 +530,13 @@ function computeFailRisk(params: {
   }
   // WALK: 자원 의존 없음 → 0
 
-  // ── 2. 거리/피로 위험 (0~20) ──────────────────────────────────
+  // ── 2. 거리/피로 위험 (0~20) — 실제 도보 시간 기준 ──────────────
   if (params.walkMin >= 20) score += 20;
   else if (params.walkMin >= 15) score += 15;
   else if (params.walkMin >= 10) score += 8;
   else if (params.walkMin >= 5) score += 3;
 
-  // ── 4. 사용자 조건 불일치 위험 (0~15) ────────────────────────
-  if (
-    params.mode === "WALK" &&
-    params.preferLessWalking &&
-    params.walkDistM > 1000
-  ) {
-    score += 15;
-  } else if (params.mode === "BIKE" && params.hasLuggage) {
-    score += 10;
-  } else if (params.mode === "LOCKER_WALK" && !params.hasLuggage) {
-    score += 8;
-  } else if (params.mode === "WALK" && params.hasLuggage) {
-    score += 5;
-  }
-
-  // ── 5. 전략 복잡도 위험 (0~5) ────────────────────────────────
+  // ── 3. 전략 복잡도 위험 (0~5) — 필요한 인프라 수 ──────────────
   if (params.mode === "LOCKER_BIKE") score += 5; // 보관함 + 대여소 + 자전거 → 가장 복잡
   else if (params.mode === "LOCKER_WALK") score += 4;
   else if (params.mode === "BIKE") score += 3;

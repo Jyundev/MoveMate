@@ -184,10 +184,10 @@ export default function HomePage() {
               <AlertTriangle size={15} className="text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <p className="text-[12px] font-semibold text-amber-700">
-                  일부 실시간 데이터가 일시적으로 불안정합니다
+                  일부 전략은 현재 사용할 수 없습니다
                 </p>
                 <p className="text-[11px] text-amber-600 mt-0.5">
-                  제한된 전략만 제공됩니다. 그래도 현재 조건의 최적 선택은 제공합니다.
+                  실시간 데이터 일시 불안정 · 사용 가능한 최적 전략을 우선 추천합니다
                 </p>
               </div>
             </div>
@@ -209,30 +209,30 @@ export default function HomePage() {
           {data && !isFetching && (
             <>
               {!data.dataStatus.bikeApiOk && (
-                <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3">
+                <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 opacity-60">
                   <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
                     <Bike size={15} className="text-gray-400" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium text-gray-500">자전거 전략</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">현재 공영자전거 데이터 조회 실패</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">현재 이용 가능 여부 확인 불가 · 데이터 일시 불안정</p>
                   </div>
                   <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full shrink-0">
-                    일시 불안정
+                    제외됨
                   </span>
                 </div>
               )}
               {!data.dataStatus.lockerApiOk && (
-                <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3">
+                <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 opacity-60">
                   <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
                     <Package size={15} className="text-gray-400" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium text-gray-500">보관함 전략</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">현재 보관함 데이터 조회 실패</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">현재 이용 가능 여부 확인 불가 · 데이터 일시 불안정</p>
                   </div>
                   <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full shrink-0">
-                    일시 불안정
+                    제외됨
                   </span>
                 </div>
               )}

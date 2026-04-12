@@ -7,18 +7,16 @@ const openai = process.env.OPENAI_API_KEY
   : null;
 
 const SYSTEM_PROMPT = `당신은 서울 이동 경로 추천 앱 MoveMate의 AI 어시스턴트입니다.
-사용자의 실시간 상황에 맞는 이동 전략을 자연스럽고 설득력 있는 한국어로 설명해주세요.
+추천 결과의 핵심 판단 근거를 짧고 자연스럽게 요약해 사용자 이해를 돕습니다.
 
 설명 작성 규칙:
-- 1~2문장으로 간결하게 작성
-- 실시간 수치(잔여 자전거 대수, 보관함 여유 칸수 등)를 구체적으로 언급
-- 사용자 조건(짐 여부, 도보 선호도)을 자연스럽게 반영
-- 이 전략이 왜 지금 이 상황에 최선인지 실제 데이터와 조건을 근거로 설명하세요 (추천 순위를 그대로 반복하지 마세요)
-- 실패 위험도가 MEDIUM 또는 HIGH인 경우, 그 이유를 한 문장 안에서 짧게 언급하세요
-- 필요하면 이 전략의 주의점이나 한계도 짧게 함께 언급하세요
+- 반드시 1문장으로 작성
+- 80자 이내로 작성
+- 화면에 이미 표시된 시간, 거리, 수치는 반복하지 않음
+- 지금 이 전략이 적절한 핵심 이유 한 가지만 설명 ("가장 안정적", "부담이 적음" 등 비교 우위 표현 권장)
 - 존댓말 사용 (합니다/습니다 체)
-- 이모지 사용 금지
-- 앞뒤 따옴표 없이 설명 본문만 출력`;
+- 이모지, 따옴표 사용 금지
+- 설명 본문만 출력`;
 
 export type AiReasonContext = {
   mode: TTransportMode;
@@ -37,7 +35,6 @@ export type AiReasonContext = {
   failRisk?: TFailRisk;
   hubName: string;
   destinationName: string;
-  rank: number;
 };
 
 function buildUserPrompt(ctx: AiReasonContext): string {
@@ -51,39 +48,37 @@ function buildUserPrompt(ctx: AiReasonContext): string {
   const lines: string[] = [
     `이동 전략: ${modeLabel}`,
     `출발지: ${ctx.hubName} → 목적지: ${ctx.destinationName}`,
-    `총 소요 시간: ${ctx.totalMinutes}분 / 예상 도보 거리: ${ctx.walkingDistanceM}m`,
     `사용자 조건: ${ctx.hasLuggage ? "짐 있음" : "짐 없음"}, ${
       ctx.preferLessWalking ? "도보 최소화 선호" : "도보 무관"
     }`,
     `실행 가능성: ${ctx.stability ?? "정보 없음"} / 실패 위험도: ${
       ctx.failRisk ?? "정보 없음"
     }`,
-    `추천 순위: ${ctx.rank}위`,
   ];
 
-  if (ctx.mode === "BIKE" && ctx.bikeCount !== undefined) {
+  if (
+    (ctx.mode === "BIKE" || ctx.mode === "LOCKER_BIKE") &&
+    ctx.bikeCount !== undefined
+  ) {
     lines.push(
-      `실시간 데이터 — 대여소: ${
-        ctx.bikeStationName ?? "인근 대여소"
-      }, 잔여 자전거: ${ctx.bikeCount}대, 대여소까지: ${
-        ctx.bikeDistanceM ?? 0
-      }m`
+      `실시간 데이터 — 대여소: ${ctx.bikeStationName ?? "인근 대여소"}, 잔여 자전거: ${ctx.bikeCount}대`
     );
-  } else if (ctx.mode === "LOCKER_WALK" && ctx.lockerCount !== undefined) {
+  }
+
+  if (
+    (ctx.mode === "LOCKER_WALK" || ctx.mode === "LOCKER_BIKE") &&
+    ctx.lockerCount !== undefined
+  ) {
     const area =
       ctx.lockerLocation === "hub"
         ? `${ctx.hubName} 근처`
         : `${ctx.destinationName} 근처`;
     lines.push(
-      `실시간 데이터 — 보관함 위치: ${area}(${
-        ctx.lockerName ?? "인근 보관함"
-      }), 여유 칸수: ${ctx.lockerCount}칸, 보관함까지: ${
-        ctx.lockerDistanceM ?? 0
-      }m`
+      `실시간 데이터 — 보관함 위치: ${area}(${ctx.lockerName ?? "인근 보관함"}), 여유 칸수: ${ctx.lockerCount}칸`
     );
   }
 
-  lines.push("", "위 이동 전략에 대한 설명을 작성해주세요.");
+  lines.push("", "이 전략을 선택해야 하는 핵심 이유를 1문장으로 작성하세요.");
   return lines.join("\n");
 }
 
@@ -108,13 +103,14 @@ export async function generateAiReason(
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: buildUserPrompt(ctx) },
       ],
-      max_output_tokens: 120,
+      max_output_tokens: 60,
       temperature: 0.4,
     });
 
     const res = await Promise.race([request, timeout]);
     if (!res) {
-      if (process.env.NODE_ENV === "development") console.warn("generateAiReason: timeout");
+      if (process.env.NODE_ENV === "development")
+        console.warn("generateAiReason: timeout");
       return null;
     }
 
@@ -124,7 +120,8 @@ export async function generateAiReason(
     }
     return text;
   } catch (err) {
-    console.error("generateAiReason error:", err);
+    if (process.env.NODE_ENV === "development")
+      console.error("generateAiReason error:", err);
     return null;
   }
 }
@@ -136,6 +133,8 @@ export async function generateAiReason(
 export async function generateAiReasons(
   contexts: AiReasonContext[]
 ): Promise<(string | null)[]> {
-  const results = await Promise.allSettled(contexts.map((ctx) => generateAiReason(ctx)));
+  const results = await Promise.allSettled(
+    contexts.map((ctx) => generateAiReason(ctx))
+  );
   return results.map((r) => (r.status === "fulfilled" ? r.value : null));
 }

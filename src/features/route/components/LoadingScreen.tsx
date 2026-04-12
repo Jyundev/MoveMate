@@ -1,14 +1,14 @@
 'use client';
 
 import type { TRouteInput } from '@/types';
-import { BarChart3, Briefcase, Check, Footprints, MapPin, Wifi } from 'lucide-react';
+import { Bike, Briefcase, Check, Footprints, Package, Route, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 const STEPS = [
-  { icon: <Wifi size={16} />, message: '공영자전거 실시간 정보 확인 중...' },
-  { icon: <Briefcase size={16} />, message: '주변 보관함 여석 확인 중...' },
-  { icon: <MapPin size={16} />, message: '이동 거리 및 시간 계산 중...' },
-  { icon: <BarChart3 size={16} />, message: '가장 적합한 이동 전략 분석 중...' },
+  { icon: <Bike size={16} />,      message: '주변 자전거 이용 가능성을 확인하고 있어요' },
+  { icon: <Package size={16} />,   message: '짐을 맡길 수 있는 보관함을 찾고 있어요' },
+  { icon: <Route size={16} />,     message: '이동 거리와 예상 시간을 계산하고 있어요' },
+  { icon: <Sparkles size={16} />,  message: '지금 상황에 가장 적절한 이동 전략을 결정하고 있어요' },
 ];
 
 function getContextMessage(input: TRouteInput): React.ReactNode | null {
@@ -42,8 +42,6 @@ type Props = {
 export default function LoadingScreen({ input, isReady, onTransition }: Props) {
   const [stepIndex, setStepIndex] = useState(0);
   const [isDone, setIsDone] = useState(false);
-  // ref로 중복 실행 방지 — isDone을 effect 의존성에 넣으면
-  // setIsDone(true) 직후 리렌더로 cleanup이 timer를 취소하는 버그 발생
   const transitionTriggered = useRef(false);
 
   const contextMsg = getContextMessage(input);
@@ -61,7 +59,7 @@ export default function LoadingScreen({ input, isReady, onTransition }: Props) {
     if (stepIndex === lastStep && isReady && !transitionTriggered.current) {
       transitionTriggered.current = true;
       setIsDone(true);
-      const timer = setTimeout(onTransition, 700);
+      const timer = setTimeout(onTransition, 1100);
       return () => clearTimeout(timer);
     }
   }, [stepIndex, isReady, lastStep, onTransition]);
@@ -79,11 +77,11 @@ export default function LoadingScreen({ input, isReady, onTransition }: Props) {
           <h2 className="text-[21px] font-bold text-gray-900 leading-snug">
             {isDone ? (
               <span className="text-blue-600 flex items-center justify-center gap-2">
-                최적의 이동 전략을 찾았습니다
+                이동 전략을 찾았습니다
                 <Check size={20} className="text-blue-600" strokeWidth={3} />
               </span>
             ) : (
-              <>지금 상황에 맞는<br />이동 전략을 찾고 있어요</>
+              <>입력하신 조건을 기반으로<br />가장 적절한 이동 전략을 찾고 있어요</>
             )}
           </h2>
         </div>
