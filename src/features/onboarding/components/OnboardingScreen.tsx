@@ -33,7 +33,7 @@ export default function OnboardingScreen({ onStart }: Props) {
             icon={<Bike size={22} className="text-blue-500" />}
             bg="bg-blue-50"
             title="실시간 자전거 현황 반영"
-            description="근처 따릉이 대여소의 잔여 자전거 수를 실시간으로 확인해 추천해드려요."
+            description="근처 공영자전거 대여소의 잔여 자전거 수를 실시간으로 확인해 추천해드려요."
           />
           <FeatureItem
             icon={<Zap size={22} className="text-yellow-500" />}

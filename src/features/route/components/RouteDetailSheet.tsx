@@ -333,7 +333,7 @@ export default function RouteDetailSheet({
           </section>
 
           {/* 액션 버튼 */}
-          <div className="space-y-2 pb-4">
+          <div className="space-y-2 pb-4" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom, 1rem))" }}>
             <button
               onClick={() => onShowMap(route)}
               className="w-full py-4 rounded-xl bg-blue-500 text-white text-sm font-semibold flex items-center justify-center gap-2 active:bg-blue-700 transition-colors"

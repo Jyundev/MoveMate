@@ -113,7 +113,7 @@ export function filterNearbyLockers(
   allLockers: TRawLocker[],
   targetLat: number,
   targetLot: number,
-  maxDistM = 3000
+  maxDistM = 1500
 ): { nearby: TNearbyLocker[]; totalAvailable: number } {
   const nearby: TNearbyLocker[] = [];
 
@@ -148,7 +148,7 @@ export function filterNearbyLockers(
 export async function getNearbyLockerAvailability(
   hubLat: number,
   hubLot: number,
-  maxDistM = 3000
+  maxDistM = 1500
 ): Promise<{ nearby: TNearbyLocker[]; totalAvailable: number }> {
   const all = await getAllLockerData();
   return filterNearbyLockers(all, hubLat, hubLot, maxDistM);
