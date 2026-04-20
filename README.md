@@ -32,10 +32,9 @@
 ### Result
 
 <div align="center" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
-  <img src="./assets/out1.png" style="width: 250px;"/>
-  <img src="./assets/out2.png" style="width: 250px;"/>
-  <img src="./assets/out3.png" style="width: 250px;"/>
-  <img src="./assets/out4.png" style="width: 250px;"/>
+  <img src="./assets/out1.png" style="width: 30%;"/>
+  <img src="./assets/out3.png" style="width: 30%;"/>
+  <img src="./assets/out4.png" style="width: 30%;"/>
 </div>
 
 ## Problem
