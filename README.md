@@ -31,10 +31,11 @@
 
 ### Result
 
-<div align="center" style="display: flex; gap: 10px; justify-content: center;">  <img src="./assets/out1.png" width="250"/>
-  <img src="./assets/out2.png" width="250"/>
-  <img src="./assets/out3.png" width="250"/>
-  <img src="./assets/out4.png" width="250"/>
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+  <img src="./assets/out1.png" style="width: 45%;"/>
+  <img src="./assets/out2.png" style="width: 45%;"/>
+  <img src="./assets/out3.png" style="width: 45%;"/>
+  <img src="./assets/out4.png" style="width: 45%;"/>
 </div>
 
 ## Problem
